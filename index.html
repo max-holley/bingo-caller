@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bingo Caller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="starfield" id="starfield"></div>
+
+  <div class="app">
+
+    <header class="header">
+      <div class="logo-ring"></div>
+      <h1 class="title">BINGO<span class="title-accent">!</span></h1>
+      <p class="subtitle">Lucky Numbers Caller</p>
+    </header>
+
+    <!-- Setup Panel -->
+    <div class="panel setup-panel" id="setupPanel">
+      <label class="field-label" for="maxNumber">Highest Number</label>
+      <div class="number-input-row">
+        <button class="stepper" id="stepDown">−</button>
+        <input type="number" id="maxNumber" value="90" min="10" max="999" />
+        <button class="stepper" id="stepUp">+</button>
+      </div>
+      <button class="btn btn-start" id="startBtn">Start Game</button>
+    </div>
+
+    <!-- Game Panel -->
+    <div class="panel game-panel hidden" id="gamePanel">
+
+      <!-- Roller Display -->
+      <div class="roller-wrap">
+        <div class="roller-track" id="rollerTrack">
+          <div class="roller-number" id="rollerDisplay">?</div>
+        </div>
+        <div class="roller-label" id="rollerLabel">Ready to call!</div>
+      </div>
+
+      <div class="game-controls">
+        <button class="btn btn-call" id="callBtn">
+          <span class="btn-inner">CALL NUMBER</span>
+        </button>
+        <button class="btn btn-reset" id="resetBtn">↺ New Game</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-val" id="calledCount">0</span>
+          <span class="stat-lbl">Called</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat">
+          <span class="stat-val" id="remainingCount">90</span>
+          <span class="stat-lbl">Remaining</span>
+        </div>
+      </div>
+
+      <!-- Board -->
+      <div class="board-section">
+        <h2 class="board-title">Called Numbers</h2>
+        <div class="board" id="board"></div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
