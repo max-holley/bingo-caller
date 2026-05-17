@@ -35,31 +35,35 @@
     <!-- Game Panel -->
     <div class="panel game-panel hidden" id="gamePanel">
 
-      <!-- Roller Display -->
-      <div class="roller-wrap">
-        <div class="roller-track" id="rollerTrack">
-          <div class="roller-number" id="rollerDisplay">?</div>
-        </div>
-        <div class="roller-label" id="rollerLabel">Ready to call!</div>
-      </div>
+      <div class="game-left">
 
-      <div class="game-controls">
-        <button class="btn btn-call" id="callBtn">
-          <span class="btn-inner">CALL NUMBER</span>
-        </button>
-        <button class="btn btn-reset" id="resetBtn">↺ New Game</button>
-      </div>
+        <!-- Roller Display -->
+        <div class="roller-wrap">
+          <div class="roller-track" id="rollerTrack">
+            <div class="roller-number" id="rollerDisplay">?</div>
+          </div>
+          <div class="roller-label" id="rollerLabel">Ready to call!</div>
+        </div>
 
-      <div class="stats-row">
-        <div class="stat">
-          <span class="stat-val" id="calledCount">0</span>
-          <span class="stat-lbl">Called</span>
+        <div class="game-controls">
+          <button class="btn btn-call" id="callBtn">
+            <span class="btn-inner">CALL NUMBER</span>
+          </button>
+          <button class="btn btn-reset" id="resetBtn">↺ New Game</button>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat">
-          <span class="stat-val" id="remainingCount">90</span>
-          <span class="stat-lbl">Remaining</span>
+
+        <div class="stats-row">
+          <div class="stat">
+            <span class="stat-val" id="calledCount">0</span>
+            <span class="stat-lbl">Called</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat">
+            <span class="stat-val" id="remainingCount">90</span>
+            <span class="stat-lbl">Remaining</span>
+          </div>
         </div>
+
       </div>
 
       <!-- Board -->
@@ -70,6 +74,11 @@
 
     </div>
 
+  </div>
+
+  <div class="theme-picker" id="themePicker">
+    <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Choose theme">🎨</button>
+    <div class="theme-options" id="themeOptions"></div>
   </div>
 
   <script src="app.js"></script>

@@ -3,7 +3,59 @@
 (function () {
   'use strict';
 
+  // ── Themes ──────────────────────────────────
+  const THEMES = [
+    { id: 'midnight', label: 'Midnight', swatch: 'conic-gradient(#f5c842 120deg, #ff3fa4 120deg 240deg, #00e5ff 240deg)' },
+    { id: 'ocean',    label: 'Ocean',    swatch: 'conic-gradient(#00cfb5 120deg, #0099ff 120deg 240deg, #6cffbe 240deg)' },
+    { id: 'sunset',   label: 'Sunset',   swatch: 'conic-gradient(#ff8c00 120deg, #ff2d55 120deg 240deg, #ffd600 240deg)' },
+    { id: 'forest',   label: 'Forest',   swatch: 'conic-gradient(#2dff6e 120deg, #00e5a0 120deg 240deg, #b8ff3f 240deg)' },
+    { id: 'aurora',   label: 'Aurora',   swatch: 'conic-gradient(#b46fff 120deg, #ff4fe0 120deg 240deg, #4de8ff 240deg)' },
+  ];
+  const THEME_KEY = 'bingo-theme';
+
+  function applyTheme(id) {
+    document.documentElement.dataset.theme = id === 'midnight' ? '' : id;
+    localStorage.setItem(THEME_KEY, id);
+    document.querySelectorAll('.theme-swatch-btn').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.themeId === id);
+    });
+  }
+
+  (function initThemePicker() {
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'midnight';
+    applyTheme(savedTheme);
+
+    const toggleBtn  = document.getElementById('themeToggleBtn');
+    const optionsEl  = document.getElementById('themeOptions');
+
+    THEMES.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'theme-swatch-btn';
+      btn.dataset.themeId = t.id;
+      btn.innerHTML = `<span class="swatch-dot" style="background:${t.swatch}"></span><span class="swatch-name">${t.label}</span>`;
+      btn.addEventListener('click', () => {
+        applyTheme(t.id);
+        optionsEl.classList.remove('open');
+        toggleBtn.classList.remove('open');
+      });
+      optionsEl.appendChild(btn);
+    });
+
+    toggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const isOpen = optionsEl.classList.toggle('open');
+      toggleBtn.classList.toggle('open', isOpen);
+    });
+
+    document.addEventListener('click', () => {
+      optionsEl.classList.remove('open');
+      toggleBtn.classList.remove('open');
+    });
+  })();
+
   // ── DOM refs ────────────────────────────────
+  const appEl         = document.querySelector('.app');
+  const header        = document.querySelector('.header');
   const setupPanel    = document.getElementById('setupPanel');
   const gamePanel     = document.getElementById('gamePanel');
   const maxNumberInput= document.getElementById('maxNumber');
@@ -63,8 +115,22 @@
     }
     maxNumber = Math.min(Math.max(val, 10), 999);
     initGame();
-    setupPanel.classList.add('hidden');
-    gamePanel.classList.remove('hidden');
+
+    header.classList.add('fade-out');
+    setupPanel.classList.add('fade-out');
+
+    setTimeout(() => {
+      header.classList.add('hidden');
+      setupPanel.classList.add('hidden');
+      header.classList.remove('fade-out');
+      setupPanel.classList.remove('fade-out');
+
+      appEl.classList.add('game-active');
+      gamePanel.classList.remove('hidden');
+      void gamePanel.offsetWidth;
+      gamePanel.classList.add('fade-in');
+      gamePanel.addEventListener('animationend', () => gamePanel.classList.remove('fade-in'), { once: true });
+    }, 380);
   });
 
   function initGame() {
@@ -87,10 +153,24 @@
 
   // ── Reset ───────────────────────────────────
   resetBtn.addEventListener('click', () => {
-    gamePanel.classList.add('hidden');
-    setupPanel.classList.remove('hidden');
-    // Reset input to reflect last used max
-    maxNumberInput.value = maxNumber;
+    gamePanel.classList.add('fade-out');
+
+    setTimeout(() => {
+      gamePanel.classList.add('hidden');
+      gamePanel.classList.remove('fade-out');
+
+      appEl.classList.remove('game-active');
+
+      header.classList.remove('hidden');
+      setupPanel.classList.remove('hidden');
+      void header.offsetWidth;
+      header.classList.add('fade-in');
+      setupPanel.classList.add('fade-in');
+      header.addEventListener('animationend', () => header.classList.remove('fade-in'), { once: true });
+      setupPanel.addEventListener('animationend', () => setupPanel.classList.remove('fade-in'), { once: true });
+
+      maxNumberInput.value = maxNumber;
+    }, 380);
   });
 
   // ── Build number board ───────────────────────
@@ -214,7 +294,15 @@
   }
 
   // ── Confetti ──────────────────────────────────
-  const CONFETTI_COLORS = ['#f5c842','#ff3fa4','#00e5ff','#ff8c00','#a3ff00'];
+  function getThemeColors() {
+    const s = getComputedStyle(document.documentElement);
+    return [
+      s.getPropertyValue('--neon-gold').trim(),
+      s.getPropertyValue('--neon-pink').trim(),
+      s.getPropertyValue('--neon-cyan').trim(),
+      '#ff8c00', '#a3ff00',
+    ];
+  }
   function confettiBurst() {
     const rect = rollerDisplay.getBoundingClientRect();
     const cx = rect.left + rect.width  / 2;
@@ -229,7 +317,8 @@
       const dx    = Math.cos(angle) * dist;
       const dy    = Math.sin(angle) * dist - 60;
       const dur   = 0.8 + Math.random() * 0.7;
-      const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+      const colors = getThemeColors();
+      const color = colors[Math.floor(Math.random() * colors.length)];
       const rot   = (Math.random() * 720 - 360).toFixed(0) + 'deg';
       el.style.cssText = `
         left:${cx}px; top:${cy}px;
