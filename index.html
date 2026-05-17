@@ -25,9 +25,9 @@
     <div class="panel setup-panel" id="setupPanel">
       <label class="field-label" for="maxNumber">Highest Number</label>
       <div class="number-input-row">
-        <button class="stepper" id="stepDown">−</button>
-        <input type="number" id="maxNumber" value="90" min="10" max="999" />
-        <button class="stepper" id="stepUp">+</button>
+        <button type="button" class="stepper" id="stepDown">−</button>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" id="maxNumber" value="90" />
+        <button type="button" class="stepper" id="stepUp">+</button>
       </div>
       <button class="btn btn-start" id="startBtn">Start Game</button>
     </div>
