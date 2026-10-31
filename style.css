@@ -833,8 +833,263 @@ input#maxNumber:focus { border-color: var(--neon-gold); box-shadow: 0 0 12px rgb
   transition: border-color .2s, box-shadow .2s;
 }
 .sound-toggle-btn:hover { border-color: var(--neon-gold); box-shadow: 0 0 14px color-mix(in srgb, var(--neon-gold) 40%, transparent); }
-[data-theme="halloween"] .sound-toggle-btn { display: flex; }
+[data-theme="halloween"] .sound-toggle-btn,
+[data-theme="christmas"] .sound-toggle-btn { display: flex; }
 
 @media (prefers-reduced-motion: reduce) {
   .spook-bat, .spook-pumpkin, .spook-fog { animation: none; display: none; }
+}
+
+/* ══════════════════════════════════════════════
+   🎄 CHRISTMAS THEME
+   ══════════════════════════════════════════════ */
+[data-theme="christmas"] {
+  --bg:             #04130d;
+  --panel:          #0a2018;
+  --panel-edge:     #1d4433;
+  --neon-gold:      #ff4b4b;
+  --neon-pink:      #1fa34a;
+  --neon-pink-dark: #0b5e2a;
+  --neon-cyan:      #ffd166;
+  --text:           #f6f3ea;
+  --text-muted:     #86a898;
+  --called-bg:      #0d261c;
+  --called-lit:     #ff4b4b;
+}
+[data-theme="christmas"] body {
+  background:
+    radial-gradient(ellipse at 50% -20%, rgba(255,209,102,0.14), transparent 55%),
+    radial-gradient(ellipse at 50% 120%, rgba(220,240,255,0.12), transparent 55%),
+    var(--bg);
+}
+[data-theme="christmas"] .star { background: #fff6d8; }
+
+/* Decorations layer */
+.xmas-layer { display: none; }
+[data-theme="christmas"] .xmas-layer {
+  display: block;
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.xmas-lights {
+  position: absolute;
+  top: -6px; left: -2%; right: -2%;
+  height: 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  /* the wire */
+  background: radial-gradient(ellipse 52% 30px at 50% -8px, transparent 96%, #2b3a2f 97%, #2b3a2f 100%, transparent 101%);
+  background-size: calc(100% / 14) 40px;
+}
+.xmas-bulb {
+  width: 10px; height: 16px;
+  margin-top: 10px;
+  border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+  background: var(--c);
+  box-shadow: 0 0 12px 3px var(--c);
+  position: relative;
+  animation: bulb-twinkle 1.5s ease-in-out infinite;
+  animation-delay: var(--delay);
+}
+.xmas-bulb:nth-child(even) { margin-top: 18px; }
+.xmas-bulb::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: 2px;
+  width: 6px; height: 5px;
+  background: #3a463d;
+  border-radius: 1px;
+}
+@keyframes bulb-twinkle {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 14px 4px var(--c); }
+  50%      { opacity: 0.35; box-shadow: 0 0 2px 0 var(--c); }
+}
+.xmas-flake {
+  position: absolute;
+  top: -20px;
+  left: var(--left);
+  width: var(--size); height: var(--size);
+  font-size: var(--size);
+  line-height: 1;
+  color: #fff;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.85;
+  animation: snow-fall var(--dur) linear infinite;
+  animation-delay: var(--delay);
+}
+.xmas-flake:not(:empty) {
+  background: none;
+  width: auto; height: auto;
+  text-shadow: 0 0 6px rgba(200,230,255,0.8);
+}
+@keyframes snow-fall {
+  0%   { transform: translate(0, 0) rotate(0); }
+  50%  { transform: translate(var(--sway), 52vh) rotate(180deg); }
+  100% { transform: translate(0, 106vh) rotate(360deg); }
+}
+.xmas-ground {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 70px;
+  background:
+    radial-gradient(ellipse 30% 60px at 15% 100%, #eef6ff 98%, transparent 100%),
+    radial-gradient(ellipse 35% 50px at 55% 100%, #e3eef8 98%, transparent 100%),
+    radial-gradient(ellipse 30% 65px at 90% 100%, #eef6ff 98%, transparent 100%);
+  filter: drop-shadow(0 -4px 12px rgba(220,240,255,0.25));
+}
+.xmas-snowman, .xmas-cane {
+  position: absolute;
+  bottom: 22px;
+  left: var(--left);
+  height: var(--h);
+}
+.xmas-snowman svg, .xmas-cane svg { height: 100%; width: auto; display: block; }
+.xmas-snowman {
+  transform-origin: bottom center;
+  animation: snowman-wobble 4s ease-in-out infinite;
+  filter: drop-shadow(0 0 10px rgba(200,230,255,0.25));
+}
+.xmas-snowman:nth-child(4) { animation-delay: -2s; }
+.xmas-cane { bottom: 30px; rotate: var(--rot, 0deg); }
+@keyframes snowman-wobble {
+  0%, 100% { rotate: -2deg; }
+  50%      { rotate: 2deg; }
+}
+@media (max-width: 700px) {
+  .xmas-snowman { height: calc(var(--h) * 0.6); }
+  .xmas-cane    { height: calc(var(--h) * 0.6); }
+}
+
+/* Header: logo ring becomes a twinkling tree */
+[data-theme="christmas"] .logo-ring {
+  border-color: transparent;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: none;
+  position: relative;
+}
+[data-theme="christmas"] .logo-ring::before {
+  content: '🎄';
+  font-size: 64px;
+  line-height: 1;
+  filter: drop-shadow(0 0 14px rgba(47,217,107,0.6));
+}
+[data-theme="christmas"] .logo-ring::after {
+  content: '⭐';
+  position: absolute;
+  top: -10px; left: 50%;
+  font-size: 22px;
+  transform: translateX(-50%);
+  animation: star-glow 1.6s ease-in-out infinite;
+}
+@media (min-width: 600px) {
+  [data-theme="christmas"] .logo-ring::before { font-size: 46px; }
+  [data-theme="christmas"] .logo-ring::after  { font-size: 16px; top: -8px; }
+}
+@keyframes star-glow {
+  0%, 100% { filter: drop-shadow(0 0 4px #ffd166); transform: translateX(-50%) scale(1); }
+  50%      { filter: drop-shadow(0 0 14px #ffd166); transform: translateX(-50%) scale(1.2); }
+}
+[data-theme="christmas"] .title,
+[data-theme="christmas"] .roller-number,
+[data-theme="christmas"] .btn-call,
+[data-theme="christmas"] .board-title,
+[data-theme="christmas"] .all-called-msg {
+  font-family: 'Mountains of Christmas', 'Bebas Neue', cursive;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+[data-theme="christmas"] .title {
+  color: var(--neon-gold);
+  text-shadow: 0 0 18px rgba(255,75,75,0.5), 0 3px 0 #5a0d0d;
+}
+[data-theme="christmas"] .title-accent { color: var(--neon-cyan); }
+[data-theme="christmas"] .roller-number { text-shadow: 0 0 30px rgba(255,75,75,0.6), 0 0 2px #fff; }
+
+/* Snow caps on panels */
+[data-theme="christmas"] .panel { position: relative; }
+[data-theme="christmas"] .panel::before {
+  content: '';
+  position: absolute;
+  top: -7px; left: 8px; right: 8px;
+  height: 16px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 10px 12px, #f4f9ff 10px, transparent 11px) 0 0 / 34px 16px repeat-x,
+    linear-gradient(#f4f9ff, #f4f9ff) 0 6px / 100% 6px no-repeat;
+  border-radius: 8px;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+}
+
+/* Candy-cane striped call button */
+[data-theme="christmas"] .btn-call {
+  background:
+    repeating-linear-gradient(-45deg, rgba(255,255,255,0.14) 0 12px, transparent 12px 24px),
+    linear-gradient(135deg, #e8232c, #8f0f16);
+  box-shadow: 0 4px 28px rgba(232,35,44,0.45);
+}
+[data-theme="christmas"] .btn-call:hover:not(:disabled) { box-shadow: 0 6px 40px rgba(232,35,44,0.65); }
+[data-theme="christmas"] .btn-start { color: #fff; }
+
+/* Holly in the roller corner */
+[data-theme="christmas"] .roller-wrap { position: relative; }
+[data-theme="christmas"] .roller-wrap::after {
+  content: '🎀';
+  position: absolute;
+  top: -12px; right: -8px;
+  font-size: 30px;
+  pointer-events: none;
+  z-index: 3;
+}
+[data-theme="christmas"] .roller-track.twinkle { animation: xmas-twinkle 0.9s ease-out; }
+@keyframes xmas-twinkle {
+  0%   { box-shadow: inset 0 0 0 rgba(255,209,102,0); }
+  25%  { box-shadow: inset 0 0 60px rgba(255,209,102,0.55), 0 0 30px rgba(255,209,102,0.4); }
+  100% { box-shadow: inset 0 0 0 rgba(255,209,102,0); }
+}
+[data-theme="christmas"] .roller-number.reveal {
+  animation: gift-reveal 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes gift-reveal {
+  0%   { transform: translateY(30px) scale(0.3); opacity: 0; }
+  70%  { transform: translateY(-6px) scale(1.12); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* Board: called numbers become baubles (red, green, gold) */
+[data-theme="christmas"] .board-cell { position: relative; }
+[data-theme="christmas"] .board-cell.lit {
+  --bauble: #e8232c;
+  background: radial-gradient(circle at 35% 30%, #fff 0 6%, color-mix(in srgb, var(--bauble) 70%, #fff) 14%, var(--bauble) 50%, color-mix(in srgb, var(--bauble) 55%, #000));
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  border-color: color-mix(in srgb, var(--bauble) 70%, #fff);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--bauble) 60%, transparent);
+}
+[data-theme="christmas"] .board-cell.lit:nth-child(3n+1) { --bauble: #1fa34a; }
+[data-theme="christmas"] .board-cell.lit:nth-child(3n+2) { --bauble: #d9a520; }
+[data-theme="christmas"] .board-cell.lit::before {
+  content: '';
+  position: absolute;
+  top: -4px; left: 50%;
+  width: 8px; height: 5px;
+  margin-left: -4px;
+  background: linear-gradient(#f5e2a0, #b8902a);
+  border-radius: 2px 2px 1px 1px;
+}
+
+/* SVG pieces in emoji bursts (candy canes) */
+.spook-piece svg { width: 0.6em; height: 1.5em; display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .xmas-flake { display: none; }
+  .xmas-bulb, .xmas-snowman { animation: none; }
 }
