@@ -10,20 +10,45 @@
     { id: 'sunset',   label: 'Sunset',   swatch: 'conic-gradient(#ff8c00 120deg, #ff2d55 120deg 240deg, #ffd600 240deg)' },
     { id: 'forest',   label: 'Forest',   swatch: 'conic-gradient(#2dff6e 120deg, #00e5a0 120deg 240deg, #b8ff3f 240deg)' },
     { id: 'aurora',   label: 'Aurora',   swatch: 'conic-gradient(#b46fff 120deg, #ff4fe0 120deg 240deg, #4de8ff 240deg)' },
+    { id: 'halloween', label: 'Halloween 🎃', swatch: 'conic-gradient(#ff7a00 120deg, #9b30ff 120deg 240deg, #7dff3a 240deg)' },
   ];
   const THEME_KEY = 'bingo-theme';
+  const HALLOWEEN_OPTOUT_KEY = 'bingo-halloween-optout'; // year the user picked another theme mid-season
 
-  function applyTheme(id) {
+  // Halloween is the automatic default every year from 26–31 October.
+  function isHalloweenSeason(d = new Date()) {
+    return d.getMonth() === 9 && d.getDate() >= 26;
+  }
+
+  function isHalloween() {
+    return document.documentElement.dataset.theme === 'halloween';
+  }
+
+  function applyTheme(id, persist = true) {
     document.documentElement.dataset.theme = id === 'midnight' ? '' : id;
-    localStorage.setItem(THEME_KEY, id);
+    if (persist) localStorage.setItem(THEME_KEY, id);
     document.querySelectorAll('.theme-swatch-btn').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.themeId === id);
     });
   }
 
+  function pickTheme(id) {
+    if (isHalloweenSeason()) {
+      const year = String(new Date().getFullYear());
+      if (id === 'halloween') {
+        // Seasonal default — don't overwrite the user's normal theme
+        localStorage.removeItem(HALLOWEEN_OPTOUT_KEY);
+        applyTheme(id, false);
+        return;
+      }
+      localStorage.setItem(HALLOWEEN_OPTOUT_KEY, year);
+    }
+    applyTheme(id);
+  }
+
   (function initThemePicker() {
     const savedTheme = localStorage.getItem(THEME_KEY) || 'midnight';
-    applyTheme(savedTheme);
+    const optedOut   = localStorage.getItem(HALLOWEEN_OPTOUT_KEY) === String(new Date().getFullYear());
 
     const toggleBtn  = document.getElementById('themeToggleBtn');
     const optionsEl  = document.getElementById('themeOptions');
@@ -34,12 +59,15 @@
       btn.dataset.themeId = t.id;
       btn.innerHTML = `<span class="swatch-dot" style="background:${t.swatch}"></span><span class="swatch-name">${t.label}</span>`;
       btn.addEventListener('click', () => {
-        applyTheme(t.id);
+        pickTheme(t.id);
         optionsEl.classList.remove('open');
         toggleBtn.classList.remove('open');
       });
       optionsEl.appendChild(btn);
     });
+
+    if (isHalloweenSeason() && !optedOut) applyTheme('halloween', false);
+    else applyTheme(savedTheme, false);
 
     toggleBtn.addEventListener('click', e => {
       e.stopPropagation();
@@ -96,6 +124,28 @@
     }
   })();
 
+  // ── Halloween decorations (hidden by CSS unless theme is active) ──
+  (function buildSpookLayer() {
+    const layer = document.getElementById('spookLayer');
+    if (!layer) return;
+    layer.innerHTML = '<div class="spook-moon"></div><div class="spook-fog"></div>';
+    for (let i = 0; i < 5; i++) {
+      const b = document.createElement('div');
+      b.className = 'spook-bat';
+      b.innerHTML = '<span>🦇</span>';
+      b.style.cssText = `--top:${(5 + Math.random() * 40).toFixed(0)}%; --size:${(18 + Math.random() * 18).toFixed(0)}px; --dur:${(12 + Math.random() * 12).toFixed(1)}s; --delay:${(-Math.random() * 20).toFixed(1)}s;`;
+      layer.appendChild(b);
+    }
+    const floaters = ['🎃', '🎃', '🎃', '👻', '🎃', '🕯️', '🎃'];
+    floaters.forEach((e, i) => {
+      const p = document.createElement('div');
+      p.className = 'spook-pumpkin';
+      p.textContent = e;
+      p.style.cssText = `--left:${(i / floaters.length * 100 + Math.random() * 8).toFixed(0)}%; --size:${(26 + Math.random() * 26).toFixed(0)}px; --dur:${(16 + Math.random() * 14).toFixed(1)}s; --delay:${(-Math.random() * 25).toFixed(1)}s;`;
+      layer.appendChild(p);
+    });
+  })();
+
   // ── Stepper buttons ─────────────────────────
   stepDownBtn.addEventListener('click', () => {
     const v = parseInt(maxNumberInput.value, 10);
@@ -142,7 +192,7 @@
     rollerDisplay.textContent = '?';
     rollerDisplay.style.color = '';
     rollerDisplay.classList.remove('rolling-flash', 'reveal');
-    rollerLabel.textContent = 'Ready to call!';
+    rollerLabel.textContent = isHalloween() ? 'Ready to summon… 🎃' : 'Ready to call!';
     callBtn.disabled = false;
     callBtn.classList.remove('rolling');
 
@@ -208,7 +258,8 @@
 
     const chosenNumber = pool.pop();   // take from shuffled pool
 
-    rollerLabel.textContent = 'Calling…';
+    rollerLabel.textContent = isHalloween() ? 'Summoning…' : 'Calling…';
+    if (isHalloween()) SpookySound.roll();
     startRollerAnimation(chosenNumber, () => {
       revealNumber(chosenNumber);
     });
@@ -267,6 +318,14 @@
 
     rollerLabel.textContent = numberToWords(n);
 
+    if (isHalloween()) {
+      SpookySound.reveal();
+      const track = document.getElementById('rollerTrack');
+      track.classList.remove('lightning');
+      void track.offsetWidth;
+      track.classList.add('lightning');
+    }
+
     // Light up board cell
     const cell = document.getElementById(`cell-${n}`);
     if (cell) {
@@ -274,18 +333,21 @@
       cell.addEventListener('animationend', () => cell.classList.remove('just-called'), { once: true });
     }
 
-    // Confetti burst from roller
-    confettiBurst();
+    // Confetti burst from roller (pumpkins & ghosts at Halloween)
+    if (isHalloween()) spookyBurst();
+    else confettiBurst();
 
     isRolling = false;
     callBtn.classList.remove('rolling');
 
     if (pool.length === 0) {
       callBtn.disabled = true;
-      rollerLabel.textContent = '🎉 All numbers called!';
+      const spooky = isHalloween();
+      rollerLabel.textContent = spooky ? '🎃 All numbers called!' : '🎉 All numbers called!';
       const msg = document.createElement('div');
       msg.className = 'all-called-msg';
-      msg.textContent = '🎉 Every number has been called — BINGO!';
+      msg.textContent = spooky ? '🎃 Every number has been called — BOO-NGO! 👻' : '🎉 Every number has been called — BINGO!';
+      if (spooky) SpookySound.cackle();
       const statsRow = gamePanel.querySelector('.stats-row');
       statsRow.insertAdjacentElement('afterend', msg);
     } else {
@@ -335,6 +397,208 @@
     }
   }
 
+  // ── Halloween emoji burst ─────────────────────
+  function spookyBurst() {
+    const rect = rollerDisplay.getBoundingClientRect();
+    const cx = rect.left + rect.width  / 2;
+    const cy = rect.top  + rect.height / 2;
+    const emojis = ['🎃', '🎃', '🎃', '👻', '🦇', '🕷️', '💀', '🍬'];
+    for (let i = 0; i < 16; i++) {
+      const el = document.createElement('div');
+      el.className = 'spook-piece';
+      el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+      const angle = Math.random() * Math.PI * 2;
+      const dist  = 90 + Math.random() * 160;
+      const dur   = 1.1 + Math.random() * 0.8;
+      el.style.cssText = `
+        left:${cx}px; top:${cy}px;
+        font-size:${18 + Math.random() * 22}px;
+        --cf-x:${(Math.cos(angle) * dist).toFixed(0)}px;
+        --cf-y:${(Math.sin(angle) * dist - 50).toFixed(0)}px;
+        --cf-r:${(Math.random() * 120 - 60).toFixed(0)}deg;
+        --cf-dur:${dur.toFixed(2)}s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), dur * 1000 + 100);
+    }
+  }
+
+  // ── Spooky sound effects (synthesised with Web Audio — no files needed) ──
+  const SpookySound = (function () {
+    const MUTE_KEY = 'bingo-spooky-muted';
+    let ctx = null;
+    let muted = localStorage.getItem(MUTE_KEY) === '1';
+    let last = -1;
+
+    const toggleBtn = document.getElementById('soundToggleBtn');
+    function renderToggle() { if (toggleBtn) toggleBtn.textContent = muted ? '🔇' : '🔊'; }
+    renderToggle();
+    if (toggleBtn) toggleBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      muted = !muted;
+      localStorage.setItem(MUTE_KEY, muted ? '1' : '0');
+      renderToggle();
+      if (!muted) ghost();
+    });
+
+    function audio() {
+      if (muted) return null;
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        ctx = new AC();
+      }
+      if (ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    function master(c, vol) {
+      const g = c.createGain();
+      g.gain.value = vol;
+      g.connect(c.destination);
+      return g;
+    }
+
+    function noiseBuffer(c, secs) {
+      const buf = c.createBuffer(1, Math.floor(c.sampleRate * secs), c.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    }
+
+    // Eerie theremin warble while the number rolls (~2s)
+    function roll() {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime;
+      const out = master(c, 0);
+      out.gain.linearRampToValueAtTime(0.12, t + 0.2);
+      out.gain.linearRampToValueAtTime(0.12, t + 1.7);
+      out.gain.linearRampToValueAtTime(0, t + 2.1);
+      const o = c.createOscillator();
+      o.type = 'sine';
+      o.frequency.setValueAtTime(300, t);
+      o.frequency.exponentialRampToValueAtTime(900, t + 2);
+      const lfo = c.createOscillator(), lfoGain = c.createGain();
+      lfo.frequency.value = 7; lfoGain.gain.value = 25;
+      lfo.connect(lfoGain).connect(o.frequency);
+      o.connect(out);
+      o.start(t); lfo.start(t);
+      o.stop(t + 2.2); lfo.stop(t + 2.2);
+    }
+
+    // Ghostly "woooOOooo"
+    function ghost() {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime;
+      const out = master(c, 0);
+      out.gain.linearRampToValueAtTime(0.18, t + 0.3);
+      out.gain.linearRampToValueAtTime(0, t + 1.8);
+      const o = c.createOscillator();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(260, t);
+      o.frequency.linearRampToValueAtTime(420, t + 0.6);
+      o.frequency.linearRampToValueAtTime(220, t + 1.8);
+      const lfo = c.createOscillator(), lg = c.createGain();
+      lfo.frequency.value = 5; lg.gain.value = 14;
+      lfo.connect(lg).connect(o.frequency);
+      const f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1200;
+      o.connect(f).connect(out);
+      o.start(t); lfo.start(t); o.stop(t + 1.9); lfo.stop(t + 1.9);
+    }
+
+    // Witch's cackle — quick descending "ha-ha-ha" bursts
+    function cackle() {
+      const c = audio(); if (!c) return;
+      const t0 = c.currentTime;
+      const out = master(c, 0.16);
+      for (let i = 0; i < 7; i++) {
+        const t = t0 + i * 0.13;
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = 'sawtooth';
+        const base = 900 - i * 55;
+        o.frequency.setValueAtTime(base, t);
+        o.frequency.exponentialRampToValueAtTime(base * 0.7, t + 0.1);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(1, t + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+        const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1400; f.Q.value = 2;
+        o.connect(f).connect(g).connect(out);
+        o.start(t); o.stop(t + 0.12);
+      }
+    }
+
+    // Creaky door
+    function creak() {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime;
+      const out = master(c, 0.14);
+      const o = c.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(90, t);
+      o.frequency.linearRampToValueAtTime(140, t + 0.5);
+      o.frequency.linearRampToValueAtTime(70, t + 1.3);
+      // Jittery amplitude = creak
+      const g = c.createGain(); g.gain.value = 0;
+      for (let i = 0; i < 40; i++) {
+        const tt = t + i * 0.033;
+        g.gain.setValueAtTime(Math.random() * 0.9 + 0.1, tt);
+      }
+      g.gain.setValueAtTime(0, t + 1.35);
+      const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 6;
+      o.connect(f).connect(g).connect(out);
+      o.start(t); o.stop(t + 1.4);
+    }
+
+    // Thunder rumble
+    function thunder() {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime;
+      const src = c.createBufferSource();
+      src.buffer = noiseBuffer(c, 2.5);
+      const f = c.createBiquadFilter(); f.type = 'lowpass';
+      f.frequency.setValueAtTime(900, t);
+      f.frequency.exponentialRampToValueAtTime(120, t + 2.2);
+      const g = c.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.6, t + 0.05);
+      g.gain.exponentialRampToValueAtTime(0.25, t + 0.4);
+      g.gain.linearRampToValueAtTime(0.35, t + 0.7);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 2.4);
+      src.connect(f).connect(g).connect(c.destination);
+      src.start(t); src.stop(t + 2.5);
+    }
+
+    // Haunted organ — diminished chord stab
+    function organ() {
+      const c = audio(); if (!c) return;
+      const t = c.currentTime;
+      const out = master(c, 0);
+      out.gain.linearRampToValueAtTime(0.09, t + 0.05);
+      out.gain.setValueAtTime(0.09, t + 1.0);
+      out.gain.exponentialRampToValueAtTime(0.001, t + 2.0);
+      [110, 130.81, 155.56, 185.0, 220].forEach(freq => {
+        [1, 2].forEach(h => {
+          const o = c.createOscillator();
+          o.type = h === 1 ? 'square' : 'sine';
+          o.frequency.value = freq * h;
+          o.detune.value = Math.random() * 8 - 4;
+          o.connect(out);
+          o.start(t); o.stop(t + 2.1);
+        });
+      });
+    }
+
+    const REVEALS = [ghost, cackle, creak, thunder, organ];
+    function reveal() {
+      let i;
+      do { i = Math.floor(Math.random() * REVEALS.length); } while (i === last);
+      last = i;
+      REVEALS[i]();
+    }
+
+    return { roll, reveal, cackle, ghost };
+  })();
+
   // ── Number flavour labels ─────────────────────
   // Classic bingo call names (for fun!) — falls back to plain "Number N"
   const CALLS = {
@@ -370,7 +634,16 @@
     88: "Two Fat Ladies", 89: "Nearly There", 90: "Top of the Shop",
   };
 
+  const SPOOKY_CALLS = {
+    1: "One Lonely Ghost", 4: "Knock Knock — Who's There?", 7: "Seven Spooky Spiders",
+    10: "Midnight Strikes Ten", 13: "Unlucky for Some 👻", 21: "Witch's Brew",
+    31: "Halloween Night 🎃", 33: "Creepy Knees", 44: "Skeleton Doors",
+    55: "Snakes in the Cauldron", 66: "Clickety Bones", 77: "Graveyard Strip",
+    88: "Two Fat Pumpkins", 90: "Top of the Crypt",
+  };
+
   function numberToWords(n) {
+    if (isHalloween() && SPOOKY_CALLS[n]) return SPOOKY_CALLS[n];
     return CALLS[n] || `Number ${n}`;
   }
 

@@ -6,12 +6,13 @@
   <title>Bingo Caller</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="icon" href="./favicon.ico">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Creepster&family=DM+Sans:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
   <div class="starfield" id="starfield"></div>
+  <div class="spook-layer" id="spookLayer" aria-hidden="true"></div>
 
   <div class="app">
 
@@ -78,6 +79,7 @@
 
   <div class="theme-picker" id="themePicker">
     <button class="theme-toggle-btn" id="themeToggleBtn" aria-label="Choose theme">🎨</button>
+    <button class="sound-toggle-btn" id="soundToggleBtn" aria-label="Toggle spooky sounds">🔊</button>
     <div class="theme-options" id="themeOptions"></div>
   </div>
 
