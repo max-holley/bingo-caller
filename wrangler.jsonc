@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "bingo-caller",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-10-30",
+  "workers_dev": true,
+  "preview_urls": true,
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/ws/*"]
+  },
+  // Durable Object binding + new_sqlite_classes migration are added in milestone 2.
+  // Custom domain bingo.webh.dev is added at the milestone 5 cutover.
+  "observability": { "enabled": false }
+}
