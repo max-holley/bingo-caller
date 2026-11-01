@@ -1,17 +1,20 @@
 <script lang="ts">
-  let { onQuick }: { onQuick: () => void } = $props();
+  import Header from '../components/Header.svelte';
+
+  let { onHost, onJoin, onQuick, notice = null }: {
+    onHost: () => void; onJoin: () => void; onQuick: () => void; notice?: string | null;
+  } = $props();
 </script>
 
 <div class="app">
-  <header class="header fade-in">
-    <div class="logo-ring"></div>
-    <h1 class="title">BINGO<span class="title-accent">!</span></h1>
-    <p class="subtitle">Lucky Numbers Caller</p>
-  </header>
+  <Header />
 
   <div class="panel landing-panel fade-in">
-    <!-- Host game / Join game arrive in milestone 2. -->
-    <button type="button" class="btn btn-start" onclick={onQuick}>Quick caller</button>
-    <p class="landing-note">Single device, works offline.</p>
+    {#if notice}
+      <p class="notice" role="status">{notice}</p>
+    {/if}
+    <button type="button" class="btn btn-start" onclick={onHost}>Host a game</button>
+    <button type="button" class="btn btn-secondary" onclick={onJoin}>Join a game</button>
+    <button type="button" class="link-btn" onclick={onQuick}>Quick caller (offline)</button>
   </div>
 </div>

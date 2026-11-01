@@ -51,8 +51,13 @@ export function initTheme() {
   apply(localDefault());
 }
 
+/** While hosting, the picker sets the room theme instead of the local preference. */
+let pickHandler: ((id: ThemeId) => void) | null = null;
+export function setPickHandler(fn: ((id: ThemeId) => void) | null) { pickHandler = fn; }
+
 /** User picked a theme in the picker. */
 export function pickTheme(id: ThemeId) {
+  if (pickHandler) { pickHandler(id); return; }
   const season = currentSeason();
   if (season) {
     if (id === season.id) {

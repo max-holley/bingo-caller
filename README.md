@@ -13,6 +13,15 @@ npm test           # unit tests (Vitest)
 npm run check      # svelte-check + Worker typecheck
 ```
 
+Multiplayer locally: `npm run build && npx wrangler dev` (serves everything on :8787), or run
+`npx wrangler dev` and `npm run dev` together (Vite proxies `/api` and `/ws`).
+
+To test room expiry quickly, create `.dev.vars` with `HOST_GRACE_SECONDS=8`, then run the
+three-browser end-to-end script: `node e2e/rooms.cjs`.
+
+Room logic lives in `src/worker/room-core.ts` (no Workers runtime dependencies, unit-tested in
+`test/room-core.test.ts`); `src/worker/room.ts` is the thin Durable Object adapter.
+
 Layout: `src/client` (Svelte app), `src/worker` (Worker), `src/shared` (code used by both),
 `public` (static files incl. self-hosted fonts and `_headers`), `test` (Vitest).
 
@@ -27,6 +36,15 @@ pushes to `main` and `multiplayer-*` branches with `wrangler deploy`. It needs t
 Until the milestone 5 cutover the app lives at the `workers.dev` URL; `bingo.webh.dev` is still served
 by GitHub Pages from the legacy `index.html` / `app.js` / `style.css` in the repo root. Those files and
 `CNAME` are removed at cutover.
+
+## Limits
+
+- Room creation: 3 per minute per client; joins: 30 per minute per client (Workers Rate Limiting
+  binding, which only supports 10 s or 60 s windows). The client IP is hashed and used only as the
+  transient rate-limit key; the app never stores or logs it.
+- Per connection: 10 messages per second, 4 KB per message. Up to 60 players per room.
+- Rooms are deleted when the host ends the game, 60 minutes after the host disconnects, or 24 hours
+  after creation, whichever comes first.
 
 ## Privacy rules for contributors
 

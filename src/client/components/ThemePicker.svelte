@@ -2,6 +2,7 @@
   import { THEMES, theme, pickTheme, isHalloween, isChristmas } from '../lib/themes';
   import { muted, toggleMuted, SpookySound, JingleSound } from '../lib/sounds';
 
+  let { showThemes = true }: { showThemes?: boolean } = $props();
   let open = $state(false);
 
   function onDocClick() { open = false; }
@@ -18,6 +19,7 @@
 <svelte:document onclick={onDocClick} />
 
 <div class="theme-picker">
+  {#if showThemes}
   <button
     type="button"
     class="theme-toggle-btn"
@@ -26,6 +28,7 @@
     aria-expanded={open}
     onclick={(e) => { e.stopPropagation(); open = !open; }}
   >🎨</button>
+  {/if}
   <button
     type="button"
     class="sound-toggle-btn"
@@ -33,7 +36,7 @@
     aria-pressed={!$muted}
     onclick={toggleSound}
   >{$muted ? '🔇' : '🔊'}</button>
-  <div class="theme-options" class:open>
+  <div class="theme-options" class:open={open && showThemes}>
     {#each THEMES as t (t.id)}
       <button
         type="button"

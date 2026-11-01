@@ -11,7 +11,18 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*", "/ws/*"]
   },
-  // Durable Object binding + new_sqlite_classes migration are added in milestone 2.
+  "durable_objects": {
+    "bindings": [{ "name": "GAME_ROOM", "class_name": "GameRoom" }]
+  },
+  // Free-plan Durable Objects must be SQLite-backed.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["GameRoom"] }],
+  // Workers Rate Limiting only supports 10s/60s windows, so limits are per minute.
+  "ratelimits": [
+    { "name": "CREATE_LIMIT", "namespace_id": "2201", "simple": { "limit": 3, "period": 60 } },
+    { "name": "JOIN_LIMIT", "namespace_id": "2202", "simple": { "limit": 30, "period": 60 } }
+  ],
+  // Defaults: 60 min host grace, 24h hard cap, 60 players. Override in .dev.vars for testing.
+  "vars": { "HOST_GRACE_SECONDS": "3600", "ROOM_TTL_SECONDS": "86400", "MAX_PLAYERS": "60" },
   // Custom domain bingo.webh.dev is added at the milestone 5 cutover.
   "observability": { "enabled": false }
 }
