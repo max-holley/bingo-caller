@@ -30,7 +30,7 @@ Layout: `src/client` (Svelte app), `src/worker` (Worker), `src/shared` (code use
 GitHub Actions (`.github/workflows/ci-deploy.yml`) runs checks and tests on every push and deploys
 pushes to `main` and `multiplayer-*` branches with `wrangler deploy`. It needs two repository secrets:
 
-- `CLOUDFLARE_API_TOKEN`: a token from the "Edit Cloudflare Workers" template.
+- `CLOUDFLARE_API_KEY`: an API token from the "Edit Cloudflare Workers" template.
 - `CLOUDFLARE_ACCOUNT_ID`: your Cloudflare account id.
 
 Until the milestone 5 cutover the app lives at the `workers.dev` URL; `bingo.webh.dev` is still served
