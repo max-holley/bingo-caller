@@ -32,7 +32,7 @@
 
     <section class="lobby-roster" aria-labelledby="roster-h">
       <h2 class="board-title" id="roster-h">Players <span class="count">{online} online · {host.players.length} joined</span></h2>
-      <Roster players={host.players} />
+      <Roster players={host.players} onKick={id => host.kick(id)} />
 
       <div class="lobby-actions">
         <button type="button" class="btn btn-start" disabled title="Calling numbers arrives in the next milestone">Start game</button>

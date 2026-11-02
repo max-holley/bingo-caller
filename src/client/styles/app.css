@@ -127,6 +127,14 @@ main { display: contents; }
 .roster-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .roster-state { font-size: 0.75rem; color: var(--text-muted); }
 .roster-item.offline .roster-name { opacity: 0.6; }
+.roster-kick {
+  background: none; border: 0; color: var(--text-muted); cursor: pointer; font-size: 0.85rem;
+  line-height: 1; padding: 0.35rem; margin: -0.35rem -0.25rem -0.35rem 0; border-radius: 6px;
+}
+.roster-kick:hover, .roster-kick:focus-visible { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.roster-item.confirming { grid-column: 1 / -1; }
+.roster-item.confirming .roster-name { opacity: 1; }
+.roster-confirm { display: flex; gap: 0.35rem; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #3ddc84; flex: none; }
 .offline .dot, .conn-reconnecting .dot, .conn-connecting .dot { background: transparent; border: 2px solid var(--text-muted); }
 .conn-closed .dot { background: #ff5a5a; }

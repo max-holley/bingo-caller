@@ -192,6 +192,41 @@ describe('players', () => {
     expect(again.last()).toEqual({ t: 'error', code: 'kicked' });
   });
 
+  it('host can kick a player, online or away', async () => {
+    const h = await host();
+    const p = await player('Ann');
+    const away = await player('Bob');
+    const { playerId, playerKey } = p.last('welcome') as unknown as { playerId: string; playerKey: string };
+    const bobId = (away.last('welcome') as unknown as { playerId: string }).playerId;
+    away.close(1000, 'bye'); await core.onClose(away);
+
+    await send(core, h, { t: 'kick', playerId });
+    expect(p.last()).toEqual({ t: 'kicked' });
+    expect(p.closed).toEqual({ code: CLOSE.rejected, reason: 'kicked' });
+    expect(io.stored!.players[playerId]).toBeUndefined();
+    expect(io.stored!.kicked).toEqual([playerId]);
+    expect(JSON.stringify(io.stored)).not.toContain('Ann');
+
+    await send(core, h, { t: 'kick', playerId: bobId });
+    const roster = h.last('roster') as unknown as { players: unknown[] };
+    expect(roster.players).toEqual([]);
+
+    const again = await connect('player');
+    await send(core, again, { t: 'join', name: 'Ann', playerId, playerKey });
+    expect(again.last()).toEqual({ t: 'error', code: 'kicked' });
+  });
+
+  it('kicking frees a place in a full room; players cannot kick', async () => {
+    const h = await host();
+    const a = await player('A'); const b = await player('B'); await player('C');
+    const aId = (a.last('welcome') as unknown as { playerId: string }).playerId;
+    await send(core, b, { t: 'kick', playerId: aId });
+    expect(io.stored!.players[aId]).toBeDefined();
+    await send(core, h, { t: 'kick', playerId: aId });
+    const d = await player('D');
+    expect(d.last('welcome')).toBeDefined();
+  });
+
   it('caps players per room', async () => {
     await player('A'); await player('B'); await player('C');
     const d = await player('D');

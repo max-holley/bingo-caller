@@ -197,8 +197,23 @@ export class RoomCore {
       case 'end':
         await this.destroy({ t: 'ended', leaderboard: this.leaderboard() }, CLOSE.ended, 'ended');
         return;
+      case 'kick': {
+        if (!s.players[msg.playerId]) return;
+        // Forget the player entirely (name, key hash, points, claims); keep only the id so a
+        // stored identity can't be used to rejoin.
+        delete s.players[msg.playerId];
+        s.claims = s.claims.filter(c => c.playerId !== msg.playerId);
+        if (!s.kicked.includes(msg.playerId)) s.kicked.push(msg.playerId);
+        await this.io.save(s);
+        for (const c of this.playerConns(msg.playerId)) {
+          c.send({ t: 'kicked' });
+          c.close(CLOSE.rejected, 'kicked');
+        }
+        this.sendRoster();
+        return;
+      }
       default:
-        // call, setStage, setPoints, lock, award, dismiss, kick: later milestones.
+        // call, setStage, setPoints, lock, award, dismiss: later milestones.
         void conn;
         return;
     }

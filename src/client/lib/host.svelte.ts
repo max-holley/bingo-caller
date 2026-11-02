@@ -75,6 +75,12 @@ export class HostController {
     this.socket.send({ t: 'setTheme', id });
   }
 
+  kick(playerId: string) {
+    // Optimistic: drop them now; the server's roster update confirms it.
+    this.players = this.players.filter(p => p.id !== playerId);
+    this.socket.send({ t: 'kick', playerId });
+  }
+
   endGame() {
     this.socket.send({ t: 'end' });
   }
