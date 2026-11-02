@@ -111,4 +111,7 @@
   {/if}
 </main>
 
-<ThemePicker showThemes={view.kind !== 'player'} />
+<!-- Players get the host's theme and no sound effects, so the picker would only cover their ticket. -->
+{#if view.kind !== 'player'}
+  <ThemePicker />
+{/if}

@@ -4,7 +4,7 @@
   import Header from '../components/Header.svelte';
   import ConnectionBadge from '../components/ConnectionBadge.svelte';
   import { numberToWords } from '../lib/calls';
-  import { restartClass, shake } from '../lib/effects';
+  import { restartClass, shake, celebrate } from '../lib/effects';
   import { STAGE_NAMES } from '../../shared/ticket';
   import type { PlayerController } from '../lib/player.svelte';
 
@@ -17,6 +17,20 @@
   const last = $derived(player.called.at(-1));
   const recent = $derived(player.called.slice(-6, -1).reverse());
   const calledSet = $derived(new Set(player.called));
+
+  let bingoEl = $state<HTMLElement>();
+  let newsEl = $state<HTMLElement>();
+
+  // Celebrate a win.
+  $effect(() => {
+    const n = player.news;
+    if (n?.kind === 'won' && newsEl) celebrate(newsEl);
+  });
+
+  /** Rows whose numbers are all marked (and called): highlighted on the ticket. */
+  const fullRows = $derived(
+    (player.ticket ?? []).map(row => row.every(n => n === 0 || (player.marks.has(n) && calledSet.has(n)))),
+  );
 
   // Pop the big number whenever a new one arrives.
   $effect(() => {
@@ -62,10 +76,26 @@
       </div>
     {/if}
 
+    {#if player.news}
+      {#key player.news.seq}
+        <p class={`news news-${player.news.kind}`} role="status" bind:this={newsEl}>{player.news.text}</p>
+      {/key}
+    {/if}
+
+    {#if player.pendingClaim}
+      <p class="claim-pending" role="status">BINGO sent! Waiting for the host to check your ticket…</p>
+    {:else if player.canClaim}
+      <button type="button" class="btn btn-bingo" bind:this={bingoEl} onclick={() => player.claim()}>
+        BINGO! <span class="bingo-sub">Claim {STAGE_NAMES[player.stage]}</span>
+      </button>
+    {:else if player.won.includes(player.stage)}
+      <p class="hint">You've won {STAGE_NAMES[player.stage]}. {player.stage === 3 ? 'Waiting for the host to finish the game…' : 'Waiting for the next stage…'}</p>
+    {/if}
+
     {#if player.ticket}
       <div class="ticket" role="group" aria-label="Your ticket">
         {#each player.ticket as row, r (r)}
-          <div class="ticket-row">
+          <div class="ticket-row" class:full={fullRows[r]}>
             {#each row as n, c (c)}
               {#if n === 0}
                 <span class="ticket-cell blank" aria-hidden="true"></span>

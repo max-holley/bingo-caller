@@ -9,6 +9,7 @@ import {
 } from '../shared/protocol';
 import { sanitizeName, dedupeName } from '../shared/names';
 import { randomId, randomToken, sha256, safeEqual } from '../shared/secrets';
+import { isValidTicket, ticketNumbers } from '../shared/ticket';
 
 export type Role = 'host' | 'player';
 
@@ -40,7 +41,11 @@ export interface RoomIO {
   deleteAlarm(): Promise<void>;
 }
 
-export type PlayerRecord = { name: string; keyHash: string; points: number; lastSeen: number };
+export type PlayerRecord = {
+  name: string; keyHash: string; points: number; lastSeen: number;
+  /** Stages this player has been awarded, so they can't claim the same stage twice. */
+  won?: Stage[];
+};
 export type PendingClaim = ClaimView;
 
 export type RoomState = {
@@ -160,7 +165,7 @@ export class RoomCore {
     if (!msg) { conn.send({ t: 'error', code: 'bad_message' }); return; }
     if (msg.t === 'join') return this.join(conn, msg);
     if (!conn.att.authed) { conn.send({ t: 'error', code: 'not_joined' }); return; }
-    // claim: milestone 4
+    return this.claim(conn, msg);
   }
 
   private rateOk(conn: Conn): boolean {
@@ -210,6 +215,47 @@ export class RoomCore {
         await this.io.save(s);
         this.broadcastPlayers({ t: 'called', n: msg.n });
         return;
+      case 'setStage': {
+        if (msg.stage === s.stage) return;
+        s.stage = msg.stage;
+        // Pending claims for the old stage are dismissed automatically.
+        const stale = s.claims.filter(c => c.stage !== s.stage);
+        s.claims = s.claims.filter(c => c.stage === s.stage);
+        await this.io.save(s);
+        // Stage first, so a player's device knows the dismissal is due to the stage change.
+        this.broadcastPlayers({ t: 'stage', stage: s.stage });
+        for (const c of stale) this.sendToPlayer(c.playerId, { t: 'claimResult', claimId: c.claimId, status: 'dismissed' });
+        conn.send(this.hostState());
+        return;
+      }
+      case 'setPoints':
+        s.points = { ...s.points, [msg.stage]: msg.points };
+        await this.io.save(s);
+        return;
+      case 'lock':
+        s.locked = msg.locked;
+        await this.io.save(s);
+        conn.send(this.hostState());
+        return;
+      case 'award':
+      case 'dismiss': {
+        const claim = s.claims.find(c => c.claimId === msg.claimId);
+        if (!claim) return;
+        s.claims = s.claims.filter(c => c !== claim);
+        const p = s.players[claim.playerId];
+        let points: number | undefined;
+        if (msg.t === 'award' && p) {
+          points = msg.points;
+          p.points += points;
+          p.won = [...(p.won ?? []), claim.stage];
+        }
+        await this.io.save(s);
+        this.sendToPlayer(claim.playerId, msg.t === 'award'
+          ? { t: 'claimResult', claimId: claim.claimId, status: 'awarded', points, total: p?.points ?? 0 }
+          : { t: 'claimResult', claimId: claim.claimId, status: 'dismissed' });
+        this.sendRoster();
+        return;
+      }
       case 'end':
         await this.destroy({ t: 'ended', leaderboard: this.leaderboard() }, CLOSE.ended, 'ended');
         return;
@@ -271,11 +317,35 @@ export class RoomCore {
     await this.io.save(s);
     conn.setAtt({ ...conn.att, authed: true, playerId });
     const p = s.players[playerId];
+    const pending = s.claims.find(c => c.playerId === playerId);
     conn.send({
       t: 'welcome', playerId, playerKey, name: p.name, theme: s.theme, started: !!s.started, stage: s.stage,
       called: s.called, locked: s.locked, points: p.points, expiresAt: s.expiresAt,
+      won: p.won ?? [], pendingClaim: pending ? pending.stage : null,
     });
     this.sendRoster();
+  }
+
+  private async claim(conn: Conn, msg: Extract<PlayerMsg, { t: 'claim' }>): Promise<void> {
+    const s = this.state!;
+    const playerId = conn.att.playerId!;
+    const p = s.players[playerId];
+    if (!p) return;
+    // Structural checks only; the host re-verifies the marks against the called list.
+    const nums = isValidTicket(msg.ticket) ? new Set(ticketNumbers(msg.ticket)) : null;
+    if (!s.started || msg.stage !== s.stage || !nums || new Set(msg.marked).size !== msg.marked.length
+        || !msg.marked.every(n => nums.has(n))) {
+      conn.send({ t: 'error', code: 'bad_claim' });
+      return;
+    }
+    if (p.won?.includes(msg.stage) || s.claims.some(c => c.playerId === playerId)) return; // one at a time
+    const claim: PendingClaim = {
+      claimId: randomId(), playerId, name: p.name, stage: msg.stage,
+      ticket: msg.ticket, marked: msg.marked, ts: this.io.now(),
+    };
+    s.claims.push(claim);
+    await this.io.save(s);
+    for (const h of this.hostConns()) h.send({ t: 'claim', ...claim });
   }
 
   // ── Helpers ──────────────────────────────────────────────────
@@ -320,6 +390,10 @@ export class RoomCore {
   private sendRoster(except?: Conn) {
     const msg: HostOut = { t: 'roster', players: this.roster(except) };
     for (const h of this.hostConns(except)) h.send(msg);
+  }
+
+  private sendToPlayer(playerId: string, msg: PlayerOut) {
+    for (const c of this.playerConns(playerId)) c.send(msg);
   }
 
   private broadcastPlayers(msg: PlayerOut) {

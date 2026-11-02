@@ -161,7 +161,7 @@ main { display: contents; }
 .stage-pill strong { color: var(--neon-cyan); font-weight: 600; }
 
 /* ── Player game ─────────────────────────────── */
-.player-app { max-width: 640px; padding-bottom: 6rem; } /* keep the ticket clear of the floating sound button */
+.player-app { max-width: 640px; }
 .player-panel { display: flex; flex-direction: column; gap: 1.1rem; }
 .player-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
 .last-call { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; min-width: 0; flex: 1 1 220px; }
@@ -212,3 +212,65 @@ main { display: contents; }
   .ticket-cell { border-radius: 6px; min-height: 30px; }
   .last-number { font-size: 3.6rem; }
 }
+
+/* ── Claims (player) ─────────────────────────── */
+.btn-bingo {
+  margin: 0; font-size: 2rem; letter-spacing: 0.12em; padding: 0.8rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.1rem;
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-pink-dark)); color: #fff; border: 0;
+  box-shadow: 0 0 28px color-mix(in srgb, var(--neon-pink) 55%, transparent);
+  animation: btn-pulse 1.4s ease-in-out infinite;
+}
+.bingo-sub { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+.claim-pending, .news {
+  margin: 0; padding: 0.75rem 1rem; border-radius: 12px; text-align: center; border: 1px solid var(--panel-edge); background: var(--bg);
+}
+.claim-pending { color: var(--neon-cyan); }
+.news { animation: fadeIn 0.3s ease; }
+.news-won { border-color: var(--neon-gold); color: var(--neon-gold); font-weight: 600; }
+.news-dismissed { border-color: #ff5a5a; color: #ffd0d0; }
+.news-stage { color: var(--neon-cyan); }
+.ticket-row.full .ticket-cell:not(.blank) { box-shadow: 0 0 0 2px var(--neon-cyan); }
+
+/* ── Claims (host) ───────────────────────────── */
+.claims { display: flex; flex-direction: column; gap: 0.5rem; }
+.claims .board-title { margin-bottom: 0; color: var(--neon-pink); }
+.claim-queue { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.claim-chip, .roster-claim {
+  font: inherit; cursor: pointer; color: var(--text); border-radius: 999px;
+  border: 2px solid var(--neon-pink); background: color-mix(in srgb, var(--neon-pink) 18%, var(--bg));
+  animation: claim-pulse 1.2s ease-in-out infinite;
+}
+.claim-chip { padding: 0.5rem 0.9rem; min-height: 44px; }
+.roster-claim { padding: 0.15rem 0.6rem; text-align: left; }
+.claim-name { font-weight: 600; overflow-wrap: anywhere; }
+@keyframes claim-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+.roster-item.claiming { border-color: var(--neon-pink); }
+.stage-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+.stage-controls .hint { text-align: left; }
+.lock-toggle { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; min-height: 44px; }
+.lock-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--neon-gold); }
+.points-table summary { cursor: pointer; color: var(--text-muted); font-size: 0.9rem; min-height: 32px; }
+.points-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+.points-field { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+.points-input { width: 5.5rem; padding: 0.4rem 0.6rem; text-align: center; }
+.btn-end-final { border-color: var(--neon-gold); color: var(--neon-gold); }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0, 0, 0, 0.65);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal { width: min(560px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 0.9rem; outline: none; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.06em; font-weight: 400; }
+.verdict { margin: 0; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid var(--panel-edge); background: var(--bg); font-size: 0.95rem; }
+.verdict-ok { border-color: #3ddc84; color: #b9f5d3; }
+.verdict-bad { border-color: #ff5a5a; color: #ffd0d0; }
+.verdict-warn { border-color: #ffb020; color: #ffe2a8; }
+.ticket-static .ticket-cell { cursor: default; }
+.ticket-cell.bad { background: transparent; border: 2px dashed #ffb020; color: #ffe2a8; text-decoration: line-through; }
+.modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.btn-award { margin: 0; width: auto; padding: 0.7rem 1.4rem; }
+.roster-item.claiming .roster-state { display: none; } /* give the claimant's name room */
+.roster-claim { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

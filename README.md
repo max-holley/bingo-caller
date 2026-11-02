@@ -18,11 +18,14 @@ Multiplayer locally: `npm run build && npx wrangler dev` (serves everything on :
 
 To test room expiry quickly, create `.dev.vars` with `HOST_GRACE_SECONDS=8`, then run the
 three-browser end-to-end script: `node e2e/rooms.cjs`. Milestone 3 (start, calling, tickets, marking,
-refresh restore, late join, host resume) has its own: `node e2e/calling.cjs`.
+refresh restore, late join, host resume) has its own: `node e2e/calling.cjs`. Milestone 4 plays a
+whole game (Line, Two Lines, Full House) with a forged claim, lock and the final wipe:
+`node e2e/full-game.cjs` (takes a few minutes, since every call rolls for 2 seconds).
 
 Tickets are generated on the player's device (`src/shared/ticket.ts`, property-tested over 10,000
 tickets) and kept in `localStorage` with the marks; the server never sees them until a claim
-(milestone 4).
+(a BINGO claim). Claims are untrusted: the host's claim modal re-validates the ticket and checks every
+mark against the host's own called list (`src/client/components/ClaimModal.svelte`).
 
 Room logic lives in `src/worker/room-core.ts` (no Workers runtime dependencies, unit-tested in
 `test/room-core.test.ts`); `src/worker/room.ts` is the thin Durable Object adapter.

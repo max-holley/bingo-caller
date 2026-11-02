@@ -55,7 +55,7 @@ export type LeaderboardEntry = { name: string; points: number };
 
 export type ErrorCode =
   | 'bad_message' | 'rate_limited' | 'no_room' | 'bad_key' | 'not_host' | 'locked' | 'full'
-  | 'bad_name' | 'kicked' | 'already_called' | 'not_started' | 'expired' | 'replaced' | 'not_joined';
+  | 'bad_name' | 'kicked' | 'already_called' | 'not_started' | 'bad_claim' | 'expired' | 'replaced' | 'not_joined';
 
 export type HostOut =
   | { t: 'hostState'; theme: ThemeIdWire; started: boolean; stage: Stage; called: number[]; locked: boolean;
@@ -67,12 +67,14 @@ export type HostOut =
 
 export type PlayerOut =
   | { t: 'welcome'; playerId: string; playerKey: string; name: string; theme: ThemeIdWire;
-      started: boolean; stage: Stage; called: number[]; locked: boolean; points: number; expiresAt: number }
+      started: boolean; stage: Stage; called: number[]; locked: boolean; points: number; expiresAt: number;
+      /** Stages already awarded to this player, and the stage of their pending claim if any. */
+      won: Stage[]; pendingClaim: Stage | null }
   | { t: 'started' }
   | { t: 'called'; n: number }
   | { t: 'theme'; id: ThemeIdWire }
   | { t: 'stage'; stage: Stage }
-  | { t: 'claimResult'; claimId: string; status: 'awarded' | 'dismissed'; points?: number }
+  | { t: 'claimResult'; claimId: string; status: 'awarded' | 'dismissed'; points?: number; total?: number }
   | { t: 'kicked' }
   | { t: 'ended'; leaderboard: LeaderboardEntry[] }
   | { t: 'error'; code: ErrorCode };

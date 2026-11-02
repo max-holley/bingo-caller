@@ -1,7 +1,7 @@
 // Player-side game controller: owns the socket and the reactive player state.
 import { GameSocket, type SocketStatus } from './ws';
 import { clearSession, saveSession, updatePlayerSession, type PlayerSession } from './session';
-import { generateTicket, isValidTicket, ticketNumbers, type Ticket } from '../../shared/ticket';
+import { generateTicket, isValidTicket, ticketNumbers, satisfiesStage, STAGE_NAMES, type Ticket } from '../../shared/ticket';
 import { setThemeOverride, isThemeId } from './themes';
 import { CLOSE } from './close';
 import type { LeaderboardEntry, ServerMsg, Stage } from '../../shared/protocol';
@@ -19,6 +19,13 @@ export class PlayerController {
   /** Generated on this device; never sent to the server except in a claim (milestone 4). */
   ticket = $state<Ticket | null>(null);
   marks = $state<Set<number>>(new Set());
+  /** Stages already awarded to this player. */
+  won = $state<Stage[]>([]);
+  /** Stage of this player's claim waiting for the host, if any. */
+  pendingClaim = $state<Stage | null>(null);
+  /** Latest claim outcome or stage change, shown as a banner. */
+  news = $state<{ kind: 'won' | 'dismissed' | 'stage'; text: string; seq: number } | null>(null);
+  private newsSeq = 0;
   stage = $state<Stage>(1);
   called = $state<number[]>([]);
   locked = $state(false);
@@ -77,6 +84,8 @@ export class PlayerController {
         this.called = m.called;
         this.locked = m.locked;
         this.points = m.points;
+        this.won = m.won;
+        this.pendingClaim = m.pendingClaim;
         if (isThemeId(m.theme)) setThemeOverride(m.theme);
         // A ticket belongs to one identity in one game; make a new one if we don't have it.
         if (!this.ticket || this.storedPlayerId !== m.playerId) {
@@ -97,7 +106,19 @@ export class PlayerController {
         if (!this.called.includes(m.n)) this.called = [...this.called, m.n];
         break;
       case 'stage':
+        if (m.stage !== this.stage) this.say('stage', `Now playing for ${STAGE_NAMES[m.stage]}`);
         this.stage = m.stage;
+        this.pendingClaim = null;
+        break;
+      case 'claimResult':
+        if (m.status === 'awarded') {
+          if (this.pendingClaim) this.won = [...this.won, this.pendingClaim];
+          this.points = m.total ?? this.points + (m.points ?? 0);
+          this.say('won', `You won ${m.points ?? 0} points!`);
+        } else if (this.pendingClaim === this.stage) {
+          this.say('dismissed', "The host didn't accept that claim. Check your marks.");
+        }
+        this.pendingClaim = null;
         break;
       case 'theme':
         if (isThemeId(m.id)) setThemeOverride(m.id);
@@ -130,6 +151,24 @@ export class PlayerController {
     this.marks = next;
     updatePlayerSession({ marks: [...next] });
     return true;
+  }
+
+  /** The current stage's pattern is complete on called, marked numbers and no claim is out. */
+  get canClaim(): boolean {
+    if (!this.ticket || !this.started || this.pendingClaim || this.won.includes(this.stage)) return false;
+    const called = new Set(this.called);
+    return satisfiesStage(this.ticket, new Set([...this.marks].filter(n => called.has(n))), this.stage);
+  }
+
+  claim() {
+    if (!this.canClaim || !this.ticket) return;
+    const called = new Set(this.called);
+    this.pendingClaim = this.stage;
+    this.socket.send({ t: 'claim', stage: this.stage, ticket: this.ticket, marked: [...this.marks].filter(n => called.has(n)) });
+  }
+
+  private say(kind: 'won' | 'dismissed' | 'stage', text: string) {
+    this.news = { kind, text, seq: ++this.newsSeq };
   }
 
   /** Leave voluntarily: forget the game on this device. */

@@ -266,6 +266,127 @@ describe('players', () => {
     expect(io.stored!.called).toEqual([]);
   });
 
+  describe('claims and stages', () => {
+    const ticket = [
+      [1, 0, 21, 0, 41, 0, 61, 0, 81],
+      [0, 12, 0, 32, 0, 52, 0, 72, 82],
+      [3, 0, 23, 33, 0, 53, 0, 73, 0],
+    ];
+    const line = [1, 21, 41, 61, 81];
+    const id = (c: FakeConn) => (c.last('welcome') as unknown as { playerId: string }).playerId;
+
+    async function started() {
+      const h = await host();
+      await send(core, h, { t: 'start' });
+      for (const n of line) await send(core, h, { t: 'call', n });
+      return h;
+    }
+
+    it('claim reaches the host; award adds points and is reported to the player', async () => {
+      const h = await started();
+      const a = await player('Ann');
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      const claim = h.last('claim') as unknown as { claimId: string; name: string; marked: number[] };
+      expect(claim).toMatchObject({ name: 'Ann', stage: 1, marked: line, ticket });
+
+      // Only one pending claim per player.
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      expect(io.stored!.claims).toHaveLength(1);
+
+      await send(core, h, { t: 'award', claimId: claim.claimId, points: 15 });
+      expect(a.last('claimResult')).toEqual({ t: 'claimResult', claimId: claim.claimId, status: 'awarded', points: 15, total: 15 });
+      expect(io.stored!.claims).toEqual([]);
+      expect(io.stored!.players[id(a)].points).toBe(15);
+      expect((h.last('roster') as unknown as { players: { points: number }[] }).players[0].points).toBe(15);
+
+      // Can't claim the same stage again once awarded.
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      expect(io.stored!.claims).toEqual([]);
+    });
+
+    it('dismiss lets the player claim again', async () => {
+      const h = await started();
+      const a = await player('Ann');
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      const { claimId } = h.last('claim') as unknown as { claimId: string };
+      await send(core, h, { t: 'dismiss', claimId });
+      expect(a.last('claimResult')).toEqual({ t: 'claimResult', claimId, status: 'dismissed' });
+      expect(io.stored!.players[id(a)].points).toBe(0);
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      expect(io.stored!.claims).toHaveLength(1);
+    });
+
+    it('rejects malformed claims and claims for the wrong stage', async () => {
+      await started();
+      const a = await player('Ann');
+      await send(core, a, { t: 'claim', stage: 2, ticket, marked: line });
+      expect(a.last()).toEqual({ t: 'error', code: 'bad_claim' });
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: [1, 2, 3] }); // not on ticket
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: [1, 1] });
+      await send(core, a, { t: 'claim', stage: 1, ticket: [[1]], marked: [1] });
+      expect(io.stored!.claims).toEqual([]);
+    });
+
+    it('next stage dismisses pending claims and tells players; rejoin restores claim state', async () => {
+      const h = await started();
+      const a = await player('Ann');
+      const b = await player('Bob');
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      await send(core, b, { t: 'claim', stage: 1, ticket, marked: line });
+      const { claimId } = h.sent.find(m => m.t === 'claim')! as unknown as { claimId: string };
+      await send(core, h, { t: 'award', claimId, points: 10 });
+
+      const { playerId, playerKey } = b.last('welcome') as unknown as { playerId: string; playerKey: string };
+      const b2 = await connect('player');
+      await send(core, b2, { t: 'join', name: 'Bob', playerId, playerKey });
+      expect(b2.last('welcome')).toMatchObject({ pendingClaim: 1, won: [] });
+
+      await send(core, h, { t: 'setStage', stage: 2 });
+      expect(b2.sent.filter(m => m.t === 'claimResult').at(-1)).toMatchObject({ status: 'dismissed' });
+      expect(a.last('stage')).toEqual({ t: 'stage', stage: 2 });
+      expect(io.stored!.claims).toEqual([]);
+      expect(h.last('hostState')).toMatchObject({ stage: 2, claims: [] });
+
+      const a2 = await connect('player');
+      const ak = a.last('welcome') as unknown as { playerId: string; playerKey: string };
+      await send(core, a2, { t: 'join', name: 'Ann', playerId: ak.playerId, playerKey: ak.playerKey });
+      expect(a2.last('welcome')).toMatchObject({ stage: 2, won: [1], pendingClaim: null, points: 10 });
+    });
+
+    it('points table and lock', async () => {
+      const h = await started();
+      await send(core, h, { t: 'setPoints', stage: 3, points: 100 });
+      expect(io.stored!.points[3]).toBe(100);
+      await send(core, h, { t: 'lock', locked: true });
+      expect(h.last('hostState')).toMatchObject({ locked: true });
+      const late = await player('Late');
+      expect(late.last()).toEqual({ t: 'error', code: 'locked' });
+      await send(core, h, { t: 'lock', locked: false });
+      expect((await player('Late')).last('welcome')).toBeDefined();
+    });
+
+    it('players cannot award, change stage or lock', async () => {
+      const h = await started();
+      const a = await player('Ann');
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      const { claimId } = h.last('claim') as unknown as { claimId: string };
+      for (const m of [{ t: 'award', claimId, points: 1000 }, { t: 'setStage', stage: 3 }, { t: 'lock', locked: true }]) await send(core, a, m);
+      expect(io.stored).toMatchObject({ stage: 1, locked: false });
+      expect(io.stored!.players[id(a)].points).toBe(0);
+    });
+
+    it('a full game ends with a leaderboard and empty storage', async () => {
+      const h = await started();
+      const a = await player('Ann');
+      await send(core, a, { t: 'claim', stage: 1, ticket, marked: line });
+      await send(core, h, { t: 'award', claimId: (h.last('claim') as unknown as { claimId: string }).claimId, points: 10 });
+      await send(core, h, { t: 'end' });
+      expect(a.last()).toEqual({ t: 'ended', leaderboard: [{ name: 'Ann', points: 10 }] });
+      expect(io.stored).toBeUndefined();
+      expect(io.alarm).toBeNull();
+    });
+  });
+
   it('caps players per room', async () => {
     await player('A'); await player('B'); await player('C');
     const d = await player('D');
