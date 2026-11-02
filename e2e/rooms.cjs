@@ -36,8 +36,8 @@ const log = (...a) => console.log(...a);
   await B.page.fill('#name', '<img src=x onerror=alert(1)>');
   await B.page.click('button:has-text("Join game")');
   await B.page.waitForSelector('text=You\'re in');
-  log('B welcome text:', await B.page.textContent('.welcome-name'));
-  log('B img injected?', await B.page.locator('.welcome-name img').count());
+  log('B welcome text:', await B.page.textContent('.player-name'));
+  log('B img injected?', await B.page.locator('.player-name img').count());
   await H.page.waitForFunction(() => document.querySelectorAll('.roster-item').length === 2);
   log('roster', await H.page.locator('.roster-item').allInnerTexts());
 
