@@ -1,7 +1,18 @@
 # Bingo Caller
 
-90-ball bingo caller. Runs on Cloudflare Workers (static assets + a Durable Object from milestone 2).
-See the multiplayer spec for the full plan; this branch is built one milestone at a time.
+90-ball UK bingo you can play together: the host calls the numbers on one screen and players join on
+their own phones with a 6-character code, mark their tickets and press BINGO. There's also an offline
+quick caller. Live at **https://bingo.webh.dev**.
+
+> **This is a vibe-coded app.** It was built by directing an AI coding assistant
+> ([Claude Code](https://claude.com/claude-code)) rather than written line by line by hand. Every change
+> was reviewed and tested (unit tests, multi-browser end-to-end tests and an accessibility scan), but it
+> hasn't had a professional security or code audit. It's a free hobby project for family games: please
+> don't rely on it for anything important, and [open an issue](https://github.com/max-holley/bingo-caller/issues)
+> if you spot a problem.
+
+Runs on Cloudflare Workers: static assets plus one Durable Object per game. No accounts, no tracking,
+and everything about a game is deleted when it ends (see the privacy notice at `/privacy`).
 
 ## Develop
 

@@ -3,6 +3,9 @@
   // trusted: the ticket is re-validated and every mark is checked against the host's own
   // called list before the pattern is counted.
   import { onMount } from 'svelte';
+  import { fade, scale } from 'svelte/transition';
+  import { cubicOut } from 'svelte/easing';
+  import { ms } from '../lib/motion';
   import { isValidTicket, completeRows, ticketNumbers, STAGE_NAMES } from '../../shared/ticket';
   import type { ClaimView } from '../../shared/protocol';
 
@@ -40,7 +43,7 @@
 
 <svelte:window onkeydown={key} />
 
-<div class="modal-backdrop" onclick={onClose} role="presentation">
+<div class="modal-backdrop" onclick={onClose} role="presentation" transition:fade={{ duration: ms(180) }}>
   <div
     class="modal panel"
     role="dialog"
@@ -50,6 +53,7 @@
     bind:this={dialog}
     onclick={e => e.stopPropagation()}
     onkeydown={e => e.stopPropagation()}
+    transition:scale={{ duration: ms(200), start: 0.96, easing: cubicOut }}
   >
     <h2 id="claim-h" class="modal-title"><span class="claim-name">{claim.name}</span> claims {STAGE_NAMES[claim.stage]}</h2>
 

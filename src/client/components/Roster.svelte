@@ -1,5 +1,8 @@
 <script lang="ts">
   import type { PlayerSummary } from '../../shared/protocol';
+  import Confirm from './Confirm.svelte';
+  import { fade, scale } from 'svelte/transition';
+  import { ms } from '../lib/motion';
   let {
     players, onKick, claimants, onOpenClaim, showPoints = false,
   }: {
@@ -20,25 +23,19 @@
   <ul class="roster">
     {#each players as p (p.id)}
       {@const claiming = claimants?.has(p.id) ?? false}
-      <li class="roster-item" class:offline={!p.online} class:confirming={confirming === p.id} class:claiming>
+      <li class="roster-item" class:offline={!p.online} class:claiming in:scale={{ duration: ms(200), start: 0.92 }} out:fade={{ duration: ms(160) }}>
         <span class="dot" aria-hidden="true"></span>
-        {#if onKick && confirming === p.id}
-          <span class="roster-name">Remove {p.name}?</span>
-          <span class="roster-confirm" role="alertdialog" aria-label={`Remove ${p.name}?`}>
-            <button type="button" class="btn btn-danger btn-small" onclick={() => { onKick(p.id); confirming = null; }}>Remove</button>
-            <button type="button" class="btn btn-small" onclick={() => (confirming = null)}>Cancel</button>
-          </span>
+        {#if claiming && onOpenClaim}
+          <button type="button" class="roster-name roster-claim" onclick={() => onOpenClaim(p.id)}>🔔 {p.name}</button>
         {:else}
-          {#if claiming && onOpenClaim}
-            <button type="button" class="roster-name roster-claim" onclick={() => onOpenClaim(p.id)}>🔔 {p.name}</button>
-          {:else}
-            <span class="roster-name">{p.name}</span>
-          {/if}
-          <span class="roster-state">{showPoints ? `${p.points} pts` : ''}{showPoints ? ' · ' : ''}{p.online ? 'online' : 'away'}</span>
-          {#if onKick}
-            <button type="button" class="roster-kick" aria-label={`Remove ${p.name} from the game`} title="Remove from game"
-              onclick={() => (confirming = p.id)}>✕</button>
-          {/if}
+          <span class="roster-name">{p.name}</span>
+        {/if}
+        <span class="roster-state">{showPoints ? `${p.points} pts` : ''}{showPoints ? ' · ' : ''}{p.online ? 'online' : 'away'}</span>
+        {#if onKick}
+          <button type="button" class="roster-kick" aria-label={`Remove ${p.name} from the game`} title="Remove from game"
+            aria-expanded={confirming === p.id} onclick={() => (confirming = confirming === p.id ? null : p.id)}>✕</button>
+          <Confirm compact bind:open={() => confirming === p.id, v => { if (!v && confirming === p.id) confirming = null; }}
+            message={`Remove ${p.name}?`} confirmLabel="Remove" onConfirm={() => onKick(p.id)} />
         {/if}
       </li>
     {/each}

@@ -3,6 +3,7 @@ import { GameSocket, type SocketStatus } from './ws';
 import { clearSession, type HostSession } from './session';
 import { setPickHandler, setThemeOverride, isThemeId, type ThemeId } from './themes';
 import { CLOSE } from './close';
+import { ClassicSound } from './sounds';
 import type { ClaimView, LeaderboardEntry, PlayerSummary, PointsTable, ServerMsg, Stage } from '../../shared/protocol';
 
 export type HostEnd = { kind: 'ended'; leaderboard: LeaderboardEntry[] } | { kind: 'gone'; code: string };
@@ -64,7 +65,10 @@ export class HostController {
         break;
       case 'claim': {
         const { t: _t, ...claim } = m;
-        if (!this.claims.some(c => c.claimId === claim.claimId)) this.claims = [...this.claims, claim];
+        if (!this.claims.some(c => c.claimId === claim.claimId)) {
+          this.claims = [...this.claims, claim];
+          ClassicSound.claim();
+        }
         break;
       }
       case 'ended':

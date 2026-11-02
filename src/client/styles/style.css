@@ -816,9 +816,9 @@ input#maxNumber:focus { border-color: var(--neon-gold); box-shadow: 0 0 12px rgb
   100% { transform: translate(calc(-50% + var(--cf-x)), calc(-50% + var(--cf-y))) scale(1) rotate(var(--cf-r)); opacity: 0; }
 }
 
-/* Sound toggle */
+/* Sound toggle (every theme has sounds) */
 .sound-toggle-btn {
-  display: none;
+  display: flex;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -833,8 +833,6 @@ input#maxNumber:focus { border-color: var(--neon-gold); box-shadow: 0 0 12px rgb
   transition: border-color .2s, box-shadow .2s;
 }
 .sound-toggle-btn:hover { border-color: var(--neon-gold); box-shadow: 0 0 14px color-mix(in srgb, var(--neon-gold) 40%, transparent); }
-[data-theme="halloween"] .sound-toggle-btn,
-[data-theme="christmas"] .sound-toggle-btn { display: flex; }
 
 @media (prefers-reduced-motion: reduce) {
   .spook-bat, .spook-pumpkin, .spook-fog { animation: none; display: none; }

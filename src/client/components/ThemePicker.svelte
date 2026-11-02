@@ -1,6 +1,6 @@
 <script lang="ts">
   import { THEMES, theme, pickTheme, isHalloween, isChristmas } from '../lib/themes';
-  import { muted, toggleMuted, SpookySound, JingleSound } from '../lib/sounds';
+  import { muted, toggleMuted, SpookySound, JingleSound, ClassicSound } from '../lib/sounds';
 
   let { showThemes = true }: { showThemes?: boolean } = $props();
   let open = $state(false);
@@ -11,7 +11,8 @@
     e.stopPropagation();
     if (!toggleMuted()) {
       if (isHalloween()) SpookySound.ghost();
-      if (isChristmas()) JingleSound.preview();
+      else if (isChristmas()) JingleSound.preview();
+      else ClassicSound.preview();
     }
   }
 </script>

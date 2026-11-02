@@ -77,7 +77,7 @@ const ok = (cond, msg) => { if (!cond) throw new Error('FAILED: ' + msg); log('o
   if (shots) await H.screenshot({ path: shots + '/forged.png' });
   await H.click('.modal button:text-is("Dismiss")');
   await H.locator('.roster-item', { hasText: 'Cheat' }).locator('.roster-kick').click();
-  await H.click('.roster-confirm button:has-text("Remove")');
+  await H.click('.confirm-panel button:text-is("Remove")');
 
   let refreshed = false;
   for (const stage of [1, 2, 3]) {

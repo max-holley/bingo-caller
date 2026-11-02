@@ -1,4 +1,4 @@
-// Seasonal sound effects (synthesised with Web Audio — no files needed).
+// Sound effects (synthesised with Web Audio — no files needed): seasonal sets plus classic ones for the regular themes.
 // Ported unchanged from the original app.js; only the mute toggle moved into a store.
 /* eslint-disable */
 // @ts-nocheck — verbatim port of untyped Web Audio code
@@ -297,3 +297,68 @@ export const JingleSound = (function () {
   return { roll, reveal, finale, preview: sparkle };
 })();
 
+
+// Classic sounds for the regular themes: game-show ticks and chimes. Kept soft and short.
+export const ClassicSound = (function () {
+  const { audio, master, pickNew } = Sfx;
+  const last = { i: -1 };
+  const NOTE = { C5: 523.25, E5: 659.25, G5: 783.99, A5: 880, C6: 1046.5, E6: 1318.5, G6: 1568 };
+
+  // A warm chime: sine with a quiet octave partial and a soft attack.
+  function chime(c, out, freq, t, dur = 0.9, vol = 1) {
+    [[1, 1], [2, 0.25], [3, 0.08]].forEach(([mult, amp]) => {
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'sine';
+      o.frequency.value = freq * mult;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(amp * vol, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur / mult);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + dur + 0.05);
+    });
+  }
+
+  function notes(seq, step, vol = 0.16, dur = 0.9) {
+    const c = audio(); if (!c) return;
+    const out = master(c, vol);
+    const t0 = c.currentTime + 0.02;
+    seq.forEach((n, i) => { if (n) chime(c, out, NOTE[n], t0 + i * step, dur); });
+  }
+
+  // Soft woodblock ticks that slow down with the roller (same timing curve as Caller).
+  function roll() {
+    const c = audio(); if (!c) return;
+    const out = master(c, 0.07);
+    const t0 = c.currentTime + 0.01;
+    for (let elapsed = 0; elapsed < 2000;) {
+      const t = t0 + elapsed / 1000;
+      const o = c.createOscillator(), g = c.createGain();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(1400, t);
+      o.frequency.exponentialRampToValueAtTime(700, t + 0.03);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(1, t + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+      o.connect(g).connect(out);
+      o.start(t); o.stop(t + 0.05);
+      const p = Math.min(elapsed / 2000, 1);
+      elapsed += 60 + 120 * p * p;
+    }
+  }
+
+  const REVEALS = [
+    () => notes(['C6', 'G6'], 0.11),                 // ding-ding
+    () => notes(['C5', 'E5', 'G5', 'C6'], 0.07),     // quick rising arpeggio
+    () => notes(['G5', 'C6', 'E6'], 0.09),           // bright "ta-da"
+  ];
+  function reveal() { pickNew(REVEALS, last)(); }
+
+  function finale() {
+    notes(['C5', 'E5', 'G5', 'C6', null, 'G5', 'C6', 'E6', 'G6'], 0.12, 0.16, 1.4);
+  }
+
+  // Host: a BINGO claim has arrived (any theme). A gentle "ding-dong".
+  function claim() { notes(['E6', 'C6'], 0.22, 0.14, 1.1); }
+
+  return { roll, reveal, finale, claim, preview: () => notes(['C6', 'G6'], 0.11) };
+})();

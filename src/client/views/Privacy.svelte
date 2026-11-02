@@ -104,6 +104,14 @@
       players and lock the game. If you're not sure about something, ask a grown-up.
     </p>
 
+    <h2 id="about">About this app</h2>
+    <p>
+      Bingo Caller is a free hobby project. It was "vibe coded": built by directing an AI coding assistant
+      rather than written line by line by hand. It has been tested carefully, but it hasn't had a professional
+      audit, so please don't rely on it for anything important. Spotted a problem? Email
+      <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
+    </p>
+
     <p class="hint">Last updated: {LAST_UPDATED}</p>
     <button type="button" class="btn btn-secondary" onclick={onBack}>← Back</button>
   </article>

@@ -5,6 +5,9 @@
   import Roster from '../components/Roster.svelte';
   import ClaimModal from '../components/ClaimModal.svelte';
   import ConnectionBadge from '../components/ConnectionBadge.svelte';
+  import Confirm from '../components/Confirm.svelte';
+  import { slide } from 'svelte/transition';
+  import { reveal } from '../lib/motion';
   import { STAGE_NAMES } from '../../shared/ticket';
   import { MAX_NUMBER, STAGES, type Stage } from '../../shared/protocol';
   import type { HostController } from '../lib/host.svelte';
@@ -50,11 +53,11 @@
     </div>
 
     {#if host.claims.length}
-      <section class="claims" aria-labelledby="claims-h">
+      <section class="claims" aria-labelledby="claims-h" transition:slide={reveal()}>
         <h2 class="board-title" id="claims-h">BINGO claims <span class="count">{host.claims.length} waiting</span></h2>
         <ul class="claim-queue">
           {#each host.claims as c (c.claimId)}
-            <li>
+            <li transition:slide={{ ...reveal(), axis: 'x' }}>
               <button type="button" class="claim-chip" onclick={() => (openClaimId = c.claimId)}>
                 🔔 <span class="claim-name">{c.name}</span> · {STAGE_NAMES[c.stage]}
               </button>
@@ -66,17 +69,10 @@
 
     <div class="stage-controls">
       {#if nextStage}
-        {#if !confirmNext}
-          <button type="button" class="btn btn-secondary btn-small" onclick={() => (host.claims.length ? (confirmNext = true) : host.nextStage())}>
-            Next stage: {STAGE_NAMES[nextStage]} →
-          </button>
-        {:else}
-          <div class="confirm" role="alertdialog" aria-label="Confirm next stage">
-            <span>{host.claims.length} claim{host.claims.length === 1 ? '' : 's'} still waiting will be dismissed.</span>
-            <button type="button" class="btn btn-danger btn-small" onclick={() => { host.nextStage(); confirmNext = false; }}>Move on</button>
-            <button type="button" class="btn btn-small" onclick={() => (confirmNext = false)}>Cancel</button>
-          </div>
-        {/if}
+        <button type="button" class="btn btn-secondary btn-small" aria-expanded={host.claims.length ? confirmNext : undefined}
+          onclick={() => (host.claims.length ? (confirmNext = !confirmNext) : host.nextStage())}>
+          Next stage: {STAGE_NAMES[nextStage]} →
+        </button>
       {:else}
         <p class="hint">Full House is the last stage. Press End game when you're done.</p>
       {/if}
@@ -84,6 +80,9 @@
         <input type="checkbox" checked={host.locked} onchange={e => host.setLocked(e.currentTarget.checked)} />
         Lock joining {host.locked ? '(locked)' : ''}
       </label>
+      <Confirm bind:open={confirmNext}
+        message={`${host.claims.length} claim${host.claims.length === 1 ? '' : 's'} still waiting will be dismissed.`}
+        confirmLabel="Move on" onConfirm={() => host.nextStage()} />
     </div>
 
     <details class="points-table">
@@ -103,15 +102,8 @@
     <Roster players={host.players} onKick={id => host.kick(id)} {claimants} onOpenClaim={openFor} showPoints />
 
     <div class="lobby-actions">
-      {#if !confirmEnd}
-        <button type="button" class="btn btn-reset" class:btn-end-final={!nextStage} onclick={() => (confirmEnd = true)}>End game</button>
-      {:else}
-        <div class="confirm" role="alertdialog" aria-label="Confirm end game">
-          <span>End the game, show the final scores and delete it?</span>
-          <button type="button" class="btn btn-danger btn-small" onclick={() => host.endGame()}>Yes, end it</button>
-          <button type="button" class="btn btn-small" onclick={() => (confirmEnd = false)}>Cancel</button>
-        </div>
-      {/if}
+      <button type="button" class="btn btn-reset" class:btn-end-final={!nextStage} aria-expanded={confirmEnd} onclick={() => (confirmEnd = !confirmEnd)}>End game</button>
+      <Confirm bind:open={confirmEnd} message="End the game, show the final scores and delete it?" confirmLabel="Yes, end it" onConfirm={() => host.endGame()} />
     </div>
   </div>
 </div>

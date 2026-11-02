@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
   import { buildStars, buildSpookLayer, buildXmasLayer } from './lib/effects';
   import { loadSession, clearSession, type HostSession } from './lib/session';
   import { HostController } from './lib/host.svelte';
@@ -36,10 +36,13 @@
   // The privacy notice is shown over the current view so an active game keeps running.
   let privacy = $state(location.pathname.replace(/\/$/, '') === '/privacy');
 
-  function openPrivacy() {
+  async function openPrivacy(section?: string) {
     privacy = true;
-    if (location.pathname !== '/privacy') history.pushState(null, '', '/privacy');
-    window.scrollTo(0, 0);
+    const url = '/privacy' + (section ? `#${section}` : '');
+    if (location.pathname + location.hash !== url) history.pushState(null, '', url);
+    await tick();
+    const target = section ? document.getElementById(section) : null;
+    if (target) target.scrollIntoView({ block: 'start' }); else window.scrollTo(0, 0);
   }
   function closePrivacy() {
     privacy = false;

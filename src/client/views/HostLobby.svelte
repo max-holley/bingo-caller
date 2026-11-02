@@ -2,6 +2,7 @@
   import QrCode from '../components/QrCode.svelte';
   import Roster from '../components/Roster.svelte';
   import ConnectionBadge from '../components/ConnectionBadge.svelte';
+  import Confirm from '../components/Confirm.svelte';
   import type { HostController } from '../lib/host.svelte';
 
   let { host }: { host: HostController } = $props();
@@ -36,15 +37,8 @@
 
       <div class="lobby-actions">
         <button type="button" class="btn btn-start" disabled={host.status !== 'open'} onclick={() => host.start()}>Start game</button>
-        {#if !confirmEnd}
-          <button type="button" class="btn btn-reset" onclick={() => (confirmEnd = true)}>End game</button>
-        {:else}
-          <div class="confirm" role="alertdialog" aria-label="Confirm end game">
-            <span>End the game for everyone and delete it?</span>
-            <button type="button" class="btn btn-danger btn-small" onclick={() => host.endGame()}>Yes, end it</button>
-            <button type="button" class="btn btn-small" onclick={() => (confirmEnd = false)}>Cancel</button>
-          </div>
-        {/if}
+        <button type="button" class="btn btn-reset" aria-expanded={confirmEnd} onclick={() => (confirmEnd = !confirmEnd)}>End game</button>
+        <Confirm bind:open={confirmEnd} message="End the game for everyone and delete it?" confirmLabel="Yes, end it" onConfirm={() => host.endGame()} />
       </div>
     </section>
   </div>

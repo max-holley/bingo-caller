@@ -4,7 +4,7 @@
   import { onDestroy, untrack, type Snippet } from 'svelte';
   import { numberToWords } from '../lib/calls';
   import { isChristmas, isHalloween } from '../lib/themes';
-  import { SpookySound, JingleSound } from '../lib/sounds';
+  import { SpookySound, JingleSound, ClassicSound } from '../lib/sounds';
   import { celebrate, restartClass } from '../lib/effects';
   import { shuffle } from '../lib/random';
 
@@ -58,7 +58,8 @@
 
     label = isHalloween() ? 'Summoning…' : isChristmas() ? 'Unwrapping…' : 'Calling…';
     if (isHalloween()) SpookySound.roll();
-    if (isChristmas()) JingleSound.roll();
+    else if (isChristmas()) JingleSound.roll();
+    else ClassicSound.roll();
     startRollerAnimation(chosen, () => reveal(chosen));
   }
 
@@ -102,7 +103,8 @@
     label = numberToWords(n);
 
     if (isHalloween()) { SpookySound.reveal(); restartClass(trackEl, 'lightning'); }
-    if (isChristmas()) { JingleSound.reveal(); restartClass(trackEl, 'twinkle'); }
+    else if (isChristmas()) { JingleSound.reveal(); restartClass(trackEl, 'twinkle'); }
+    else ClassicSound.reveal();
 
     justCalled = n;
     celebrate(rollerEl);
@@ -117,6 +119,7 @@
                    : '🎉 Every number has been called — BINGO!';
       if (spooky) SpookySound.cackle();
       if (festive) JingleSound.finale();
+      if (!spooky && !festive) ClassicSound.finale();
     }
   }
 </script>

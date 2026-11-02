@@ -3,6 +3,9 @@
   // Numbers are only ever marked by the player tapping them; uncalled numbers are refused.
   import Header from '../components/Header.svelte';
   import ConnectionBadge from '../components/ConnectionBadge.svelte';
+  import Confirm from '../components/Confirm.svelte';
+  import { slide, fade } from 'svelte/transition';
+  import { reveal, ms } from '../lib/motion';
   import { numberToWords } from '../lib/calls';
   import { restartClass, shake, celebrate } from '../lib/effects';
   import { STAGE_NAMES } from '../../shared/ticket';
@@ -70,7 +73,7 @@
     </div>
 
     {#if recent.length}
-      <div class="recent" aria-label="Previous numbers">
+      <div class="recent" aria-label="Previous numbers" transition:slide={reveal()}>
         <span class="recent-label">Before that</span>
         {#each recent as n (n)}<span class="recent-ball">{n}</span>{/each}
       </div>
@@ -78,18 +81,18 @@
 
     {#if player.news}
       {#key player.news.seq}
-        <p class={`news news-${player.news.kind}`} role="status" bind:this={newsEl}>{player.news.text}</p>
+        <p class={`news news-${player.news.kind}`} role="status" bind:this={newsEl} in:slide={reveal()}>{player.news.text}</p>
       {/key}
     {/if}
 
     {#if player.pendingClaim}
-      <p class="claim-pending" role="status">BINGO sent! Waiting for the host to check your ticket…</p>
+      <p class="claim-pending" role="status" transition:slide={reveal()}>BINGO sent! Waiting for the host to check your ticket…</p>
     {:else if player.canClaim}
-      <button type="button" class="btn btn-bingo" bind:this={bingoEl} onclick={() => player.claim()}>
+      <button type="button" class="btn btn-bingo" bind:this={bingoEl} onclick={() => player.claim()} transition:slide={reveal()}>
         BINGO! <span class="bingo-sub">Claim {STAGE_NAMES[player.stage]}</span>
       </button>
     {:else if player.won.includes(player.stage)}
-      <p class="hint">You've won {STAGE_NAMES[player.stage]}. {player.stage === 3 ? 'Waiting for the host to finish the game…' : 'Waiting for the next stage…'}</p>
+      <p class="hint" in:fade={{ duration: ms(200) }}>You've won {STAGE_NAMES[player.stage]}. {player.stage === 3 ? 'Waiting for the host to finish the game…' : 'Waiting for the next stage…'}</p>
     {/if}
 
     {#if player.ticket}
@@ -122,15 +125,9 @@
 
     <div class="player-foot">
       <ConnectionBadge status={player.status} />
-      {#if !confirmLeave}
-        <button type="button" class="link-btn" onclick={() => (confirmLeave = true)}>Leave game</button>
-      {:else}
-        <div class="confirm" role="alertdialog" aria-label="Confirm leave">
-          <span>Leave and forget this game on this device?</span>
-          <button type="button" class="btn btn-danger btn-small" onclick={() => { player.leave(); onLeave(); }}>Leave</button>
-          <button type="button" class="btn btn-small" onclick={() => (confirmLeave = false)}>Stay</button>
-        </div>
-      {/if}
+      <button type="button" class="link-btn" aria-expanded={confirmLeave} onclick={() => (confirmLeave = !confirmLeave)}>Leave game</button>
+      <Confirm bind:open={confirmLeave} message="Leave and forget this game on this device?" confirmLabel="Leave" cancelLabel="Stay"
+        onConfirm={() => { player.leave(); onLeave(); }} />
     </div>
   </div>
 </div>
