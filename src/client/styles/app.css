@@ -1,0 +1,336 @@
+/* Additions for the multi-view app. The original theme styles live in style.css, unchanged. */
+.landing-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.9rem;
+}
+.landing-panel .btn { margin-top: 0; }
+.landing-note {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  min-height: 44px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link-btn:hover { color: var(--text); }
+
+/* ── Shared form + layout pieces (multiplayer) ── */
+main { display: contents; }
+.btn-secondary {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--panel-edge);
+  font-size: 1.2rem;
+  padding: 0.75rem 3rem;
+}
+.btn-secondary:hover { border-color: var(--neon-gold); color: var(--neon-gold); }
+.btn-small {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--panel-edge);
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  min-height: 44px;
+}
+.btn-small:hover { border-color: var(--neon-gold); color: var(--neon-gold); }
+.btn-danger { border-color: #ff5a5a; color: #ffb3b3; }
+.notice, .form-error {
+  text-align: center;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--panel-edge);
+  font-size: 0.95rem;
+}
+.form-error { border-color: #ff5a5a; color: #ffd0d0; }
+.form-error::before { content: '⚠ '; }
+.hint { color: var(--text-muted); font-size: 0.9rem; text-align: center; }
+.text-input {
+  width: min(320px, 100%);
+  height: 52px;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: 1.15rem;
+  text-align: center;
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--panel-edge);
+  border-radius: 10px;
+  outline: none;
+}
+.text-input:focus { border-color: var(--neon-gold); box-shadow: 0 0 12px rgba(245,200,66,0.25); }
+.code-input {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.3em;
+  color: var(--neon-gold);
+  text-transform: uppercase;
+}
+.jit-notice {
+  max-width: 34ch;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  border-left: 3px solid var(--neon-gold);
+  padding: 0.25rem 0 0.25rem 0.75rem;
+  text-align: left;
+}
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+}
+.welcome-name { font-size: 1.3rem; }
+
+/* Lobby */
+.lobby {
+  display: grid;
+  grid-template-columns: minmax(240px, 300px) 1fr;
+  gap: 2rem;
+}
+@media (max-width: 760px) { .lobby { grid-template-columns: 1fr; } }
+.lobby-join { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; text-align: center; }
+.code-label { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); }
+.room-code {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(3rem, 9vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: 0.15em;
+  color: var(--neon-gold);
+}
+.join-link { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.join-url { font-size: 0.85rem; color: var(--text-muted); word-break: break-all; }
+.lobby-roster { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.lobby-roster .count { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0; color: var(--text-muted); margin-left: 0.5rem; }
+.lobby-actions { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: auto; }
+.roster { list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.5rem; }
+.roster-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  min-height: 44px;
+  min-width: 0;
+}
+.roster-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster-state { font-size: 0.75rem; color: var(--text-muted); }
+.roster-item.offline .roster-name { opacity: 0.6; }
+.roster-kick {
+  background: none; border: 0; color: var(--text-muted); cursor: pointer; font-size: 0.9rem;
+  line-height: 1; width: 44px; height: 44px; flex: none; margin: -0.6rem -0.75rem -0.6rem -0.25rem; border-radius: 8px;
+}
+.roster-kick:hover, .roster-kick:focus-visible { color: var(--text); background: rgba(255, 255, 255, 0.08); }
+.roster-confirm { display: flex; gap: 0.35rem; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #3ddc84; flex: none; }
+.offline .dot, .conn-reconnecting .dot, .conn-connecting .dot { background: transparent; border: 2px solid var(--text-muted); }
+.conn-closed .dot { background: #ff5a5a; }
+.conn { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+
+/* Leaderboard */
+.leaderboard { width: min(420px, 100%); padding-left: 1.5rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.leaderboard li { padding: 0.4rem 0; border-bottom: 1px solid var(--panel-edge); }
+.leaderboard li > span { display: inline-flex; }
+.lb-name { overflow-wrap: anywhere; }
+.lb-points { float: right; color: var(--neon-gold); font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.05em; }
+
+/* ── Host game: side panel ───────────────────── */
+.host-side { display: flex; flex-direction: column; gap: 1rem; }
+.host-side-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; }
+.host-side-head .hint { text-align: left; }
+.host-side .board-title { margin-bottom: 0; }
+.host-side .count { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0; color: var(--text-muted); margin-left: 0.5rem; }
+.inline-code { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.12em; color: var(--neon-gold); }
+.stage-pill {
+  display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.85rem;
+  border: 1px solid var(--panel-edge); background: var(--bg); color: var(--text-muted);
+}
+.stage-pill strong { color: var(--neon-cyan); font-weight: 600; }
+
+/* ── Player game ─────────────────────────────── */
+.player-app { max-width: 640px; }
+.player-panel { display: flex; flex-direction: column; gap: 1.1rem; }
+.player-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.last-call { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; min-width: 0; flex: 1 1 220px; }
+.last-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+.last-number { font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; line-height: 1; color: var(--neon-gold); text-shadow: 0 0 24px rgba(245, 200, 66, 0.35); }
+.last-number.reveal { animation: num-reveal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.last-words { color: var(--text); font-size: 0.95rem; }
+.player-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+.player-meta .hint { text-align: left; }
+.player-name { color: var(--text); overflow-wrap: anywhere; }
+.recent { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.recent-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-right: 0.25rem; }
+.recent-ball {
+  min-width: 2.1rem; height: 2.1rem; padding: 0 0.3rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; background: var(--called-bg); border: 1px solid var(--panel-edge); color: var(--text);
+}
+
+.ticket {
+  display: flex; flex-direction: column; gap: 5px; padding: 8px; border-radius: 12px;
+  background: var(--bg); border: 2px solid var(--neon-gold);
+}
+.ticket-row { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+.ticket-cell {
+  position: relative; aspect-ratio: 1; min-height: 34px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px solid var(--panel-edge); background: var(--called-bg); color: var(--text);
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(1rem, 4.5vw, 1.6rem); padding: 0; cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.ticket-cell:active { transform: scale(0.94); }
+.ticket-cell:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 2px; }
+.ticket-cell.blank { background: transparent; border-style: dashed; opacity: 0.35; cursor: default; }
+/* Called but not marked: a small dot, never an automatic mark. */
+.ticket-cell.called::after {
+  content: ''; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-cyan);
+}
+/* Marked: filled, plus a ring so the state doesn't rely on colour alone. */
+.ticket-cell.marked { background: var(--neon-gold); color: var(--bg); border-color: var(--neon-gold); }
+.ticket-cell.marked::before {
+  content: ''; position: absolute; inset: 14%; border-radius: 50%; border: 2px solid var(--bg); opacity: 0.55;
+}
+.ticket-hint { text-align: center; font-size: 0.85rem; color: var(--text-muted); min-height: 1.3em; }
+.not-called { color: #ffb3b3; }
+.player-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+@media (max-width: 480px) {
+  .ticket { padding: 5px; gap: 3px; }
+  .ticket-row { gap: 3px; }
+  .ticket-cell { border-radius: 6px; min-height: 30px; }
+  .last-number { font-size: 3.6rem; }
+}
+
+/* ── Claims (player) ─────────────────────────── */
+.btn-bingo {
+  margin: 0; font-size: 2rem; letter-spacing: 0.12em; padding: 0.8rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.1rem;
+  background: linear-gradient(135deg, var(--neon-pink), var(--neon-pink-dark)); color: #fff; border: 0;
+  box-shadow: 0 0 28px color-mix(in srgb, var(--neon-pink) 55%, transparent);
+  animation: btn-pulse 1.4s ease-in-out infinite;
+}
+.bingo-sub { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.9; }
+.claim-pending, .news {
+  margin: 0; padding: 0.75rem 1rem; border-radius: 12px; text-align: center; border: 1px solid var(--panel-edge); background: var(--bg);
+}
+.claim-pending { color: var(--neon-cyan); }
+.news { animation: fadeIn 0.3s ease; }
+.news-won { border-color: var(--neon-gold); color: var(--neon-gold); font-weight: 600; }
+.news-dismissed { border-color: #ff5a5a; color: #ffd0d0; }
+.news-stage { color: var(--neon-cyan); }
+.ticket-row.full .ticket-cell:not(.blank) { box-shadow: 0 0 0 2px var(--neon-cyan); }
+
+/* ── Claims (host) ───────────────────────────── */
+.claims { display: flex; flex-direction: column; gap: 0.5rem; }
+.claims .board-title { margin-bottom: 0; color: var(--neon-pink); }
+.claim-queue { list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.claim-chip, .roster-claim {
+  font: inherit; cursor: pointer; color: var(--text); border-radius: 999px;
+  border: 2px solid var(--neon-pink); background: color-mix(in srgb, var(--neon-pink) 18%, var(--bg));
+  animation: claim-pulse 1.2s ease-in-out infinite;
+}
+.claim-chip { padding: 0.5rem 0.9rem; min-height: 44px; }
+.roster-claim { padding: 0.15rem 0.6rem; text-align: left; }
+.claim-name { font-weight: 600; overflow-wrap: anywhere; }
+@keyframes claim-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--neon-pink) 55%, transparent); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+.roster-item.claiming { border-color: var(--neon-pink); }
+.stage-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+.stage-controls .hint { text-align: left; }
+.lock-toggle { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--text-muted); cursor: pointer; min-height: 44px; }
+.lock-toggle input { width: 1.1rem; height: 1.1rem; accent-color: var(--neon-gold); }
+.points-table summary { cursor: pointer; color: var(--text-muted); font-size: 0.9rem; min-height: 32px; }
+.points-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.5rem; }
+.points-field { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+.points-input { width: 5.5rem; padding: 0.4rem 0.6rem; text-align: center; }
+.btn-end-final { border-color: var(--neon-gold); color: var(--neon-gold); }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 300; background: rgba(0, 0, 0, 0.65);
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal { width: min(560px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 0.9rem; outline: none; }
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 0.06em; font-weight: 400; }
+.verdict { margin: 0; padding: 0.6rem 0.8rem; border-radius: 10px; border: 1px solid var(--panel-edge); background: var(--bg); font-size: 0.95rem; }
+.verdict-ok { border-color: #3ddc84; color: #b9f5d3; }
+.verdict-bad { border-color: #ff5a5a; color: #ffd0d0; }
+.verdict-warn { border-color: #ffb020; color: #ffe2a8; }
+.ticket-static .ticket-cell { cursor: default; }
+.ticket-cell.bad { background: transparent; border: 2px dashed #ffb020; color: #ffe2a8; text-decoration: line-through; }
+.modal-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.btn-award { margin: 0; width: auto; padding: 0.7rem 1.4rem; }
+.roster-item.claiming .roster-state { display: none; } /* give the claimant's name room */
+.roster-claim { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── Accessibility pass ──────────────────────── */
+/* A visible keyboard focus ring on every control. */
+button:focus-visible, a:focus-visible, summary:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--neon-cyan); outline-offset: 2px;
+}
+.theme-swatch-btn { min-height: 44px; }
+.points-table summary { min-height: 44px; display: flex; align-items: center; }
+.roster-claim { min-height: 36px; }
+
+/* ── Footer and privacy notice ───────────────── */
+.site-footer {
+  position: relative; z-index: 1; width: min(560px, 100%); margin: 0 auto; padding: 0 1rem 8.5rem; /* clear of the floating sound + theme buttons */
+  font-size: 0.85rem; color: var(--text-muted); text-align: center;
+}
+.footer-links { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.25rem 0.5rem; }
+.site-footer a, .jit-notice a, .privacy a { color: var(--text); text-underline-offset: 3px; }
+.site-footer a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 0.75rem; }
+.privacy { display: flex; flex-direction: column; gap: 0.85rem; line-height: 1.55; text-align: left; }
+.privacy h2 { font-family: 'Bebas Neue', sans-serif; font-weight: 400; font-size: 1.4rem; letter-spacing: 0.08em; color: var(--neon-gold); margin-top: 0.6rem; }
+.privacy-lead { font-size: 1.05rem; }
+.privacy ul { padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.privacy code { font-size: 0.85em; background: var(--bg); padding: 0.05rem 0.3rem; border-radius: 4px; }
+.privacy .btn { align-self: flex-start; margin-top: 0.5rem; }
+.table-wrap { overflow-x: auto; }
+.privacy table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 520px; }
+.privacy th, .privacy td { border: 1px solid var(--panel-edge); padding: 0.5rem 0.6rem; vertical-align: top; text-align: left; }
+.privacy th { color: var(--text-muted); font-weight: 600; background: var(--bg); }
+
+/* ── Smooth confirmations ────────────────────── */
+.confirm-panel { width: 100%; overflow: hidden; }
+.confirm-inner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.5rem 0.75rem;
+  margin-top: 0.6rem; padding: 0.7rem 0.9rem; border-radius: 12px; text-align: center;
+  border: 1px solid color-mix(in srgb, #ff5a5a 45%, var(--panel-edge)); background: var(--bg); outline: none;
+}
+.confirm-panel.compact .confirm-inner { margin-top: 0.4rem; padding: 0.5rem; gap: 0.4rem; }
+.confirm-msg { color: var(--text); font-size: 0.92rem; }
+.confirm-btns { display: inline-flex; gap: 0.5rem; }
+/* The button that opened a confirmation stays put and looks pressed. */
+.btn, .link-btn, .roster-kick { transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease; }
+[aria-expanded="true"].btn-reset, [aria-expanded="true"].btn-secondary { border-color: #ff5a5a; color: #ffb3b3; }
+[aria-expanded="true"].link-btn, [aria-expanded="true"].roster-kick { color: var(--text); }
+@media (prefers-reduced-motion: reduce) {
+  .btn, .link-btn, .roster-kick { transition: none; }
+}
+.roster-item { flex-wrap: wrap; }
+.roster-item .confirm-panel { flex-basis: 100%; }
+.footer-note { margin-top: 0.1rem; font-size: 0.75rem; }
+.footer-note a { display: inline; min-height: 0; padding: 0.4rem 0.2rem; }
+
+/* The floating picker's box spans the (hidden) options menu: let taps through except on its buttons,
+   and keep the closed menu out of the tab order. */
+.theme-picker { pointer-events: none; }
+.theme-picker > button { pointer-events: auto; }
+.theme-options { visibility: hidden; transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s; }
+.theme-options.open { visibility: visible; transition: opacity .18s ease, transform .18s ease, visibility 0s; }
+/* Narrow phones: stack the footer links so they stay clear of the floating buttons in the corner. */
+@media (max-width: 480px) {
+  .footer-links { flex-direction: column; gap: 0; }
+  .footer-links > span[aria-hidden] { display: none; }
+  .footer-links .link-btn, .footer-links a { padding: 0 0.75rem; }
+}
