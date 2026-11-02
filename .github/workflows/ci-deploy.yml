@@ -28,7 +28,7 @@ jobs:
       - run: npm run build
 
   deploy:
-    # Deploys to the workers.dev preview URL. bingo.webh.dev stays on GitHub Pages until the milestone 5 cutover.
+    # Deploys the Worker, served at bingo.webh.dev (custom domain) and the workers.dev preview URL.
     needs: test
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

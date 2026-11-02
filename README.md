@@ -40,9 +40,8 @@ pushes to `main` and `multiplayer-*` branches with `wrangler deploy`. It needs o
 
 - `CLOUDFLARE_API_KEY`: an API token from the "Edit Cloudflare Workers" template.
 
-Until the milestone 5 cutover the app lives at the `workers.dev` URL; `bingo.webh.dev` is still served
-by GitHub Pages from the legacy `index.html` / `app.js` / `style.css` in the repo root. Those files and
-`CNAME` are removed at cutover.
+The app is served at **https://bingo.webh.dev** (a Workers custom domain, set in `wrangler.jsonc`) and at
+the `workers.dev` preview URL. GitHub Pages is no longer used.
 
 ## Limits
 
@@ -61,4 +60,9 @@ by GitHub Pages from the legacy `index.html` / `app.js` / `style.css` in the rep
   No cookies.
 - Never render user-supplied text with `innerHTML` / `{@html}`.
 - Any future non-essential technology (analytics, ad scripts, third-party embeds, a Buy Me a Coffee
-  widget) must be wrapped in `ConsentGate` (milestone 5) and must not load before opt-in consent.
+  widget) must be wrapped in `src/client/slots/ConsentGate.svelte` and must not load before opt-in
+  consent. ConsentGate is a deliberate no-op today (it renders nothing), so it needs a real consent UI first.
+  Extension points are switched in `src/client/config.ts`.
+- The privacy notice (`src/client/views/Privacy.svelte`) must describe what the code does. Change it, and
+  its "Last updated" date, in the same commit as any change to data, storage or third parties.
+- "Clear data on this device" (footer) wipes every `bingo.*` key via `clearAllData()` in `lib/storage.ts`.

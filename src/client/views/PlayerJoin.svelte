@@ -6,8 +6,8 @@
   import { PlayerController } from '../lib/player.svelte';
   import { errorText } from '../lib/errors';
 
-  let { initialCode = '', onJoined, onBack }: {
-    initialCode?: string; onJoined: (p: PlayerController) => void; onBack: () => void;
+  let { initialCode = '', onJoined, onBack, onPrivacy }: {
+    initialCode?: string; onJoined: (p: PlayerController) => void; onBack: () => void; onPrivacy: () => void;
   } = $props();
 
   let codeInput = $state(untrack(() => initialCode));
@@ -44,7 +44,7 @@
     <p class="jit-notice" id="name-notice">
       Use a nickname, not your full name. The host can see your name, and everyone sees it on the
       final scoreboard. It's deleted when the game ends.
-      <!-- Privacy notice link: milestone 5 -->
+      <a href="/privacy" onclick={e => { e.preventDefault(); onPrivacy(); }}>Privacy notice</a>
     </p>
     <label class="field-label" for="name">Your nickname</label>
     <input id="name" class="text-input" autocomplete="off" maxlength={NAME_MAX * 2} bind:value={name}

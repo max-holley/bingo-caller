@@ -1,5 +1,5 @@
-// All app storage lives under the `bingo.` prefix so "Clear data on this device"
-// (milestone 5) can wipe it with one sweep. Only localStorage is used; no cookies.
+// All app storage lives under the `bingo.` prefix so "Clear data on this device" can wipe it
+// with one sweep (clearAllData). Only localStorage is used; no cookies.
 
 export const KEYS = {
   theme: 'bingo.theme',
@@ -32,4 +32,16 @@ export function migrateLegacyKeys(): void {
     if (store.get(newKey) === null) store.set(newKey, v);
     store.remove(oldKey);
   }
+}
+
+/** "Clear data on this device": remove every `bingo.*` key (and the legacy pre-v1 keys). */
+export function clearAllData(): void {
+  safe(() => {
+    const keys: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.startsWith('bingo.') || LEGACY.some(([old]) => old === k))) keys.push(k);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+  }, undefined);
 }

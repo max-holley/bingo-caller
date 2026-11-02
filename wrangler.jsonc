@@ -23,6 +23,10 @@
   ],
   // Defaults: 60 min host grace, 24h hard cap, 60 players. Override in .dev.vars for testing.
   "vars": { "HOST_GRACE_SECONDS": "3600", "ROOM_TTL_SECONDS": "86400", "MAX_PLAYERS": "60" },
-  // Custom domain bingo.webh.dev is added at the milestone 5 cutover.
+  // Production hostname. Cloudflare creates the DNS record and certificate for a custom domain.
+  // workers.dev stays on as a preview address.
+  "routes": [{ "pattern": "bingo.webh.dev", "custom_domain": true }],
+  // Keep `wrangler dev` on localhost (otherwise it rewrites requests to the route's host).
+  "dev": { "host": "localhost" },
   "observability": { "enabled": false }
 }
