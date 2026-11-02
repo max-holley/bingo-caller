@@ -11,6 +11,9 @@ export class HostController {
   readonly code: string;
   status = $state<SocketStatus>('connecting');
   ready = $state(false);
+  started = $state(false);
+  /** Bumped on every full state sync so the caller board can rebuild from the server's list. */
+  syncKey = $state(0);
   players = $state<PlayerSummary[]>([]);
   stage = $state<Stage>(1);
   called = $state<number[]>([]);
@@ -39,8 +42,10 @@ export class HostController {
     switch (m.t) {
       case 'hostState':
         this.players = m.players;
+        this.started = m.started;
         this.stage = m.stage;
         this.called = m.called;
+        this.syncKey++;
         this.locked = m.locked;
         this.points = m.points;
         this.expiresAt = m.expiresAt;
@@ -73,6 +78,16 @@ export class HostController {
   setTheme(id: ThemeId) {
     setThemeOverride(id);
     this.socket.send({ t: 'setTheme', id });
+  }
+
+  start() {
+    this.socket.send({ t: 'start' });
+  }
+
+  /** The caller board has revealed a number: tell the room. */
+  call(n: number) {
+    if (!this.called.includes(n)) this.called = [...this.called, n];
+    this.socket.send({ t: 'call', n });
   }
 
   kick(playerId: string) {

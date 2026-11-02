@@ -14,6 +14,8 @@
     onCalled,
     onReset,
     resetLabel = '↺ New Game',
+    disabled = false,
+    disabledLabel,
     extraControls,
   }: {
     max: number;
@@ -21,6 +23,9 @@
     onCalled?: (n: number) => void;
     onReset?: () => void;
     resetLabel?: string;
+    /** Block calling (e.g. while the host is reconnecting) without losing the board. */
+    disabled?: boolean;
+    disabledLabel?: string;
     extraControls?: Snippet;
   } = $props();
 
@@ -47,7 +52,7 @@
   const numbers = $derived(Array.from({ length: max }, (_, i) => i + 1));
 
   function call() {
-    if (isRolling || pool.length === 0) return;
+    if (isRolling || disabled || pool.length === 0) return;
     isRolling = true;
     const chosen = pool.pop()!; // take from shuffled pool
 
@@ -135,10 +140,10 @@
       type="button"
       class="btn btn-call"
       class:rolling={isRolling}
-      disabled={isRolling || remaining === 0}
+      disabled={isRolling || disabled || remaining === 0}
       onclick={call}
     >
-      <span class="btn-inner">CALL NUMBER</span>
+      <span class="btn-inner">{disabled && disabledLabel ? disabledLabel : 'CALL NUMBER'}</span>
     </button>
     {#if onReset}
       <button type="button" class="btn btn-reset" onclick={onReset}>{resetLabel}</button>

@@ -13,6 +13,7 @@
   import QuickCaller from './views/QuickCaller.svelte';
   import HostSetup from './views/HostSetup.svelte';
   import HostLobby from './views/HostLobby.svelte';
+  import HostGame from './views/HostGame.svelte';
   import PlayerJoin from './views/PlayerJoin.svelte';
   import PlayerGame from './views/PlayerGame.svelte';
   import EndScreen from './views/EndScreen.svelte';
@@ -96,7 +97,11 @@
   {:else if view.kind === 'hostSetup'}
     <HostSetup onBack={() => home()} onCreated={(s: HostSession) => go({ kind: 'host', ctrl: new HostController(s) })} />
   {:else if view.kind === 'host'}
-    <HostLobby host={view.ctrl} />
+    {#if view.ctrl.started}
+      <HostGame host={view.ctrl} />
+    {:else}
+      <HostLobby host={view.ctrl} />
+    {/if}
   {:else if view.kind === 'join'}
     <PlayerJoin initialCode={view.code} onBack={() => home()} onJoined={ctrl => go({ kind: 'player', ctrl })} />
   {:else if view.kind === 'player'}

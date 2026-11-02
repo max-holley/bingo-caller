@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { randomInt, shuffle } from '../src/client/lib/random';
+import { randomInt, shuffle } from '../src/shared/random';
 
 describe('random', () => {
   it('randomInt stays in range and covers it', () => {

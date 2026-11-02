@@ -51,6 +51,8 @@ export type RoomState = {
   hostKeyHash: string;
   hostLastSeen: number;
   theme: ThemeIdWire;
+  /** Host pressed Start. Optional so rooms created before milestone 3 still load. */
+  started?: boolean;
   stage: Stage;
   points: PointsTable;
   locked: boolean;
@@ -194,6 +196,20 @@ export class RoomCore {
         await this.io.save(s);
         this.broadcastPlayers({ t: 'theme', id: msg.id });
         return;
+      case 'start':
+        if (s.started) return;
+        s.started = true;
+        await this.io.save(s);
+        this.broadcastPlayers({ t: 'started' });
+        conn.send(this.hostState());
+        return;
+      case 'call':
+        if (!s.started) { conn.send({ t: 'error', code: 'not_started' }); return; }
+        if (s.called.includes(msg.n)) { conn.send({ t: 'error', code: 'already_called' }); return; }
+        s.called.push(msg.n);
+        await this.io.save(s);
+        this.broadcastPlayers({ t: 'called', n: msg.n });
+        return;
       case 'end':
         await this.destroy({ t: 'ended', leaderboard: this.leaderboard() }, CLOSE.ended, 'ended');
         return;
@@ -213,8 +229,7 @@ export class RoomCore {
         return;
       }
       default:
-        // call, setStage, setPoints, lock, award, dismiss: later milestones.
-        void conn;
+        // setStage, setPoints, lock, award, dismiss: milestone 4.
         return;
     }
   }
@@ -257,7 +272,7 @@ export class RoomCore {
     conn.setAtt({ ...conn.att, authed: true, playerId });
     const p = s.players[playerId];
     conn.send({
-      t: 'welcome', playerId, playerKey, name: p.name, theme: s.theme, stage: s.stage,
+      t: 'welcome', playerId, playerKey, name: p.name, theme: s.theme, started: !!s.started, stage: s.stage,
       called: s.called, locked: s.locked, points: p.points, expiresAt: s.expiresAt,
     });
     this.sendRoster();
@@ -297,7 +312,7 @@ export class RoomCore {
   private hostState(): HostOut {
     const s = this.state!;
     return {
-      t: 'hostState', theme: s.theme, stage: s.stage, called: s.called, locked: s.locked,
+      t: 'hostState', theme: s.theme, started: !!s.started, stage: s.stage, called: s.called, locked: s.locked,
       players: this.roster(), claims: s.claims, points: s.points, expiresAt: s.expiresAt,
     };
   }

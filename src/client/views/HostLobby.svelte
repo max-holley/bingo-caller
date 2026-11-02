@@ -35,7 +35,7 @@
       <Roster players={host.players} onKick={id => host.kick(id)} />
 
       <div class="lobby-actions">
-        <button type="button" class="btn btn-start" disabled title="Calling numbers arrives in the next milestone">Start game</button>
+        <button type="button" class="btn btn-start" disabled={host.status !== 'open'} onclick={() => host.start()}>Start game</button>
         {#if !confirmEnd}
           <button type="button" class="btn btn-reset" onclick={() => (confirmEnd = true)}>End game</button>
         {:else}

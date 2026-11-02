@@ -24,6 +24,7 @@ const TicketS = v.pipe(v.array(v.pipe(v.array(Cell), v.length(9))), v.length(3))
 // `host` authenticates the connection (keeps the secret out of the URL).
 export const HostMsg = v.variant('t', [
   v.object({ t: v.literal('host'), hostKey: Key }),
+  v.object({ t: v.literal('start') }),
   v.object({ t: v.literal('call'), n: Ball }),
   v.object({ t: v.literal('setTheme'), id: Theme }),
   v.object({ t: v.literal('setStage'), stage: StageS }),
@@ -54,10 +55,10 @@ export type LeaderboardEntry = { name: string; points: number };
 
 export type ErrorCode =
   | 'bad_message' | 'rate_limited' | 'no_room' | 'bad_key' | 'not_host' | 'locked' | 'full'
-  | 'bad_name' | 'kicked' | 'already_called' | 'expired' | 'replaced' | 'not_joined';
+  | 'bad_name' | 'kicked' | 'already_called' | 'not_started' | 'expired' | 'replaced' | 'not_joined';
 
 export type HostOut =
-  | { t: 'hostState'; theme: ThemeIdWire; stage: Stage; called: number[]; locked: boolean;
+  | { t: 'hostState'; theme: ThemeIdWire; started: boolean; stage: Stage; called: number[]; locked: boolean;
       players: PlayerSummary[]; claims: ClaimView[]; points: PointsTable; expiresAt: number }
   | { t: 'roster'; players: PlayerSummary[] }
   | ({ t: 'claim' } & ClaimView)
@@ -66,7 +67,8 @@ export type HostOut =
 
 export type PlayerOut =
   | { t: 'welcome'; playerId: string; playerKey: string; name: string; theme: ThemeIdWire;
-      stage: Stage; called: number[]; locked: boolean; points: number; expiresAt: number }
+      started: boolean; stage: Stage; called: number[]; locked: boolean; points: number; expiresAt: number }
+  | { t: 'started' }
   | { t: 'called'; n: number }
   | { t: 'theme'; id: ThemeIdWire }
   | { t: 'stage'; stage: Stage }

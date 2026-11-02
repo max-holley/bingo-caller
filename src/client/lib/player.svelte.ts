@@ -1,6 +1,7 @@
 // Player-side game controller: owns the socket and the reactive player state.
 import { GameSocket, type SocketStatus } from './ws';
-import { clearSession, saveSession, type PlayerSession } from './session';
+import { clearSession, saveSession, updatePlayerSession, type PlayerSession } from './session';
+import { generateTicket, isValidTicket, ticketNumbers, type Ticket } from '../../shared/ticket';
 import { setThemeOverride, isThemeId } from './themes';
 import { CLOSE } from './close';
 import type { LeaderboardEntry, ServerMsg, Stage } from '../../shared/protocol';
@@ -13,7 +14,11 @@ export class PlayerController {
   readonly code: string;
   status = $state<SocketStatus>('connecting');
   joined = $state(false);
+  started = $state(false);
   name = $state('');
+  /** Generated on this device; never sent to the server except in a claim (milestone 4). */
+  ticket = $state<Ticket | null>(null);
+  marks = $state<Set<number>>(new Set());
   stage = $state<Stage>(1);
   called = $state<number[]>([]);
   locked = $state(false);
@@ -26,6 +31,7 @@ export class PlayerController {
   private identity: Identity | null;
   private requestedName: string;
   private lastError = '';
+  private storedPlayerId: string | null = null;
 
   /** Either resume a stored session or join fresh with a name. */
   constructor(opts: { session: PlayerSession } | { code: string; name: string }) {
@@ -34,6 +40,12 @@ export class PlayerController {
       this.identity = { playerId: opts.session.playerId, playerKey: opts.session.playerKey };
       this.requestedName = opts.session.name;
       this.name = opts.session.name;
+      this.storedPlayerId = opts.session.playerId;
+      if (isValidTicket(opts.session.ticket)) {
+        this.ticket = opts.session.ticket;
+        const nums = new Set(ticketNumbers(this.ticket));
+        this.marks = new Set((opts.session.marks ?? []).filter(n => nums.has(n)));
+      }
     } else {
       this.code = opts.code;
       this.identity = null;
@@ -60,16 +72,32 @@ export class PlayerController {
       case 'welcome':
         this.identity = { playerId: m.playerId, playerKey: m.playerKey };
         this.name = m.name;
+        this.started = m.started;
         this.stage = m.stage;
         this.called = m.called;
         this.locked = m.locked;
         this.points = m.points;
         if (isThemeId(m.theme)) setThemeOverride(m.theme);
+        // A ticket belongs to one identity in one game; make a new one if we don't have it.
+        if (!this.ticket || this.storedPlayerId !== m.playerId) {
+          this.ticket = generateTicket();
+          this.marks = new Set();
+        }
+        this.storedPlayerId = m.playerId;
         saveSession({
           v: 1, role: 'player', code: this.code, playerId: m.playerId, playerKey: m.playerKey,
-          name: m.name, expiresAt: m.expiresAt,
+          name: m.name, expiresAt: m.expiresAt, ticket: this.ticket, marks: [...this.marks],
         });
         this.joined = true;
+        break;
+      case 'started':
+        this.started = true;
+        break;
+      case 'called':
+        if (!this.called.includes(m.n)) this.called = [...this.called, m.n];
+        break;
+      case 'stage':
+        this.stage = m.stage;
         break;
       case 'theme':
         if (isThemeId(m.id)) setThemeOverride(m.id);
@@ -92,6 +120,16 @@ export class PlayerController {
     if (code === CLOSE.ended) this.end ??= { kind: 'ended', leaderboard: [] };
     else this.end = { kind: 'gone', code: reason || this.lastError || 'no_room' };
     this.dispose();
+  }
+
+  /** Toggle a mark. Only called numbers can be marked; returns false if `n` hasn't been called. */
+  toggle(n: number): boolean {
+    if (!this.called.includes(n)) return false;
+    const next = new Set(this.marks);
+    if (next.has(n)) next.delete(n); else next.add(n);
+    this.marks = next;
+    updatePlayerSession({ marks: [...next] });
+    return true;
   }
 
   /** Leave voluntarily: forget the game on this device. */

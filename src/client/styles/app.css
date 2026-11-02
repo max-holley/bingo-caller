@@ -146,3 +146,69 @@ main { display: contents; }
 .leaderboard li > span { display: inline-flex; }
 .lb-name { overflow-wrap: anywhere; }
 .lb-points { float: right; color: var(--neon-gold); font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.05em; }
+
+/* ── Host game: side panel ───────────────────── */
+.host-side { display: flex; flex-direction: column; gap: 1rem; }
+.host-side-head { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.25rem; }
+.host-side-head .hint { text-align: left; }
+.host-side .board-title { margin-bottom: 0; }
+.host-side .count { font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0; color: var(--text-muted); margin-left: 0.5rem; }
+.inline-code { font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 0.12em; color: var(--neon-gold); }
+.stage-pill {
+  display: inline-block; padding: 0.3rem 0.8rem; border-radius: 999px; font-size: 0.85rem;
+  border: 1px solid var(--panel-edge); background: var(--bg); color: var(--text-muted);
+}
+.stage-pill strong { color: var(--neon-cyan); font-weight: 600; }
+
+/* ── Player game ─────────────────────────────── */
+.player-app { max-width: 640px; padding-bottom: 6rem; } /* keep the ticket clear of the floating sound button */
+.player-panel { display: flex; flex-direction: column; gap: 1.1rem; }
+.player-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.last-call { display: flex; flex-direction: column; align-items: flex-start; gap: 0.15rem; min-width: 0; flex: 1 1 220px; }
+.last-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); }
+.last-number { font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; line-height: 1; color: var(--neon-gold); text-shadow: 0 0 24px rgba(245, 200, 66, 0.35); }
+.last-number.reveal { animation: num-reveal 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.last-words { color: var(--text); font-size: 0.95rem; }
+.player-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 0.4rem; }
+.player-meta .hint { text-align: left; }
+.player-name { color: var(--text); overflow-wrap: anywhere; }
+.recent { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; }
+.recent-label { font-size: 0.72rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-right: 0.25rem; }
+.recent-ball {
+  min-width: 2.1rem; height: 2.1rem; padding: 0 0.3rem; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; background: var(--called-bg); border: 1px solid var(--panel-edge); color: var(--text);
+}
+
+.ticket {
+  display: flex; flex-direction: column; gap: 5px; padding: 8px; border-radius: 12px;
+  background: var(--bg); border: 2px solid var(--neon-gold);
+}
+.ticket-row { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+.ticket-cell {
+  position: relative; aspect-ratio: 1; min-height: 34px; display: flex; align-items: center; justify-content: center;
+  border-radius: 8px; border: 1px solid var(--panel-edge); background: var(--called-bg); color: var(--text);
+  font-family: 'Bebas Neue', sans-serif; font-size: clamp(1rem, 4.5vw, 1.6rem); padding: 0; cursor: pointer;
+  transition: background 0.2s, color 0.2s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent; touch-action: manipulation;
+}
+.ticket-cell:active { transform: scale(0.94); }
+.ticket-cell:focus-visible { outline: 2px solid var(--neon-cyan); outline-offset: 2px; }
+.ticket-cell.blank { background: transparent; border-style: dashed; opacity: 0.35; cursor: default; }
+/* Called but not marked: a small dot, never an automatic mark. */
+.ticket-cell.called::after {
+  content: ''; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--neon-cyan);
+}
+/* Marked: filled, plus a ring so the state doesn't rely on colour alone. */
+.ticket-cell.marked { background: var(--neon-gold); color: var(--bg); border-color: var(--neon-gold); }
+.ticket-cell.marked::before {
+  content: ''; position: absolute; inset: 14%; border-radius: 50%; border: 2px solid var(--bg); opacity: 0.55;
+}
+.ticket-hint { text-align: center; font-size: 0.85rem; color: var(--text-muted); min-height: 1.3em; }
+.not-called { color: #ffb3b3; }
+.player-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+@media (max-width: 480px) {
+  .ticket { padding: 5px; gap: 3px; }
+  .ticket-row { gap: 3px; }
+  .ticket-cell { border-radius: 6px; min-height: 30px; }
+  .last-number { font-size: 3.6rem; }
+}

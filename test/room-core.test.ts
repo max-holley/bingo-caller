@@ -227,6 +227,45 @@ describe('players', () => {
     expect(d.last('welcome')).toBeDefined();
   });
 
+  it('start then call broadcasts numbers; late joiners get the called list', async () => {
+    const h = await host();
+    const p = await player('Ann');
+    expect(p.last('welcome')).toMatchObject({ started: false, called: [] });
+
+    await send(core, h, { t: 'call', n: 7 });
+    expect(h.last()).toEqual({ t: 'error', code: 'not_started' });
+
+    await send(core, h, { t: 'start' });
+    expect(p.last()).toEqual({ t: 'started' });
+    expect(h.last('hostState')).toMatchObject({ started: true });
+
+    await send(core, h, { t: 'call', n: 7 });
+    await send(core, h, { t: 'call', n: 90 });
+    expect(p.sent.filter(m => m.t === 'called')).toEqual([{ t: 'called', n: 7 }, { t: 'called', n: 90 }]);
+
+    await send(core, h, { t: 'call', n: 7 });
+    expect(h.last()).toEqual({ t: 'error', code: 'already_called' });
+    for (const n of [0, 91, 2.5, '8']) await send(core, h, { t: 'call', n });
+    expect(io.stored!.called).toEqual([7, 90]);
+
+    const late = await player('Bob');
+    expect(late.last('welcome')).toMatchObject({ started: true, called: [7, 90] });
+
+    // The host resumes with the called list after reconnecting.
+    h.close(1000, 'bye'); await core.onClose(h);
+    const h2 = await host();
+    expect(h2.last('hostState')).toMatchObject({ started: true, called: [7, 90] });
+  });
+
+  it('players cannot start or call', async () => {
+    await host();
+    const p = await player('Ann');
+    await send(core, p, { t: 'start' });
+    await send(core, p, { t: 'call', n: 5 });
+    expect(io.stored!.started).toBeFalsy();
+    expect(io.stored!.called).toEqual([]);
+  });
+
   it('caps players per room', async () => {
     await player('A'); await player('B'); await player('C');
     const d = await player('D');
